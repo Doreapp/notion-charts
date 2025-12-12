@@ -37,7 +37,7 @@ export default function ChartWidget() {
     const params = new URLSearchParams();
     params.set("database_id", newConfig.databaseId);
     params.set("field_id", newConfig.fieldId);
-    router.push(`/embed?${params.toString()}`);
+    router.push(`/?${params.toString()}`);
   };
 
   const handleEditConfig = () => {

@@ -47,13 +47,13 @@ npm run dev
 
 ### 5. Access the app
 
-Open `http://localhost:3000/embed` to test in a full web page.
+Open `http://localhost:3000` to test in a full web page.
 
 #### Test in an actual Notion page
 
-1. Create a new embed block, with url `https://localhost:3000/embed`
+1. Create a new embed block, with url `https://localhost:3000`
 2. Open browser dev tools and locate the corresponding iframe
-3. Update the `src` attribute of the iframe to set it to `https://localhost:3000/embed` (without the `s` at `http`)
+3. Update the `src` attribute of the iframe to set it to `https://localhost:3000` (without the `s` at `http`)
 4. It will work until you refresh the page.
 
 NB: You can setup a custom user script (GreaseMonkey-like) to automatically update

@@ -74,7 +74,7 @@ export default function ChartConfig({ onConfigChange, initialConfig }: ChartConf
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
         <FormControl fullWidth disabled={isLoading}>
-          <InputLabel>Database</InputLabel>
+          <InputLabel size="small">Database</InputLabel>
           <Select
             value={isLoading ? "loading" : selectedDatabaseId}
             label="Database"
@@ -95,7 +95,7 @@ export default function ChartConfig({ onConfigChange, initialConfig }: ChartConf
         </FormControl>
 
         <FormControl fullWidth disabled={!selectedDatabaseId || isLoading}>
-          <InputLabel>Field</InputLabel>
+          <InputLabel size="small">Field</InputLabel>
           <Select
             value={selectedFieldId}
             label="Field"
