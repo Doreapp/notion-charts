@@ -13,7 +13,7 @@ import {
   Typography,
   Paper,
 } from "@mui/material";
-import type { NotionDatabase, NotionProperty, ChartConfig } from "@/types/notion";
+import type { Database, Property, ChartConfig } from "@/types/notion";
 
 interface ChartConfigProps {
   onConfigChange: (config: ChartConfig) => void;
@@ -21,8 +21,8 @@ interface ChartConfigProps {
 }
 
 export default function ChartConfig({ onConfigChange, initialConfig }: ChartConfigProps) {
-  const [databases, setDatabases] = useState<NotionDatabase[]>([]);
-  const [properties, setProperties] = useState<NotionProperty[]>([]);
+  const [databases, setDatabases] = useState<Database[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string>(
     initialConfig?.databaseId || ""
   );
