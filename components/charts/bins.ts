@@ -1,6 +1,9 @@
 import { ChartDataPoint } from "@/lib/notion/chart-processor";
 
-export function binDates(data: ChartDataPoint[], numBins: number): ChartDataPoint[] {
+export function binDates(
+  data: ChartDataPoint[],
+  numBins: number
+): ChartDataPoint[] {
   const dateValues: Array<{ date: Date; value: number }> = [];
 
   data.forEach((point) => {
@@ -36,7 +39,10 @@ export function binDates(data: ChartDataPoint[], numBins: number): ChartDataPoin
   });
 
   dateValues.forEach(({ date, value }) => {
-    const binIndex = Math.min(Math.floor((date.getTime() - minTimestamp) / binSize), numBins - 1);
+    const binIndex = Math.min(
+      Math.floor((date.getTime() - minTimestamp) / binSize),
+      numBins - 1
+    );
     const binStart = minTimestamp + binIndex * binSize;
     bins.set(binStart, (bins.get(binStart) || 0) + value);
   });

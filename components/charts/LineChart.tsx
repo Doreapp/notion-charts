@@ -20,9 +20,16 @@ interface LineChartProps {
   fieldType?: string;
 }
 
-export default function LineChart({ data, xAxisLabel, yAxisLabel, fieldType }: LineChartProps) {
+export default function LineChart({
+  data,
+  xAxisLabel,
+  yAxisLabel,
+  fieldType,
+}: LineChartProps) {
   const isDates =
-    fieldType === "date" || fieldType === "created_time" || fieldType === "last_edited_time";
+    fieldType === "date" ||
+    fieldType === "created_time" ||
+    fieldType === "last_edited_time";
 
   const processedData = useMemo(() => {
     if (data.length === 0) return [];
@@ -36,8 +43,14 @@ export default function LineChart({ data, xAxisLabel, yAxisLabel, fieldType }: L
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <RechartsLineChart data={processedData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.09)" />
+      <RechartsLineChart
+        data={processedData}
+        margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+      >
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke="rgba(255, 255, 255, 0.09)"
+        />
         <XAxis
           dataKey="name"
           tick={{ fontSize: 12, fill: "rgba(255, 255, 255, 0.65)" }}
@@ -75,7 +88,13 @@ export default function LineChart({ data, xAxisLabel, yAxisLabel, fieldType }: L
             color: "#FFFFFF",
           }}
         />
-        <Line type="monotone" dataKey="value" stroke="#2383E2" strokeWidth={2} dot={false} />
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke="#2383E2"
+          strokeWidth={2}
+          dot={false}
+        />
       </RechartsLineChart>
     </ResponsiveContainer>
   );

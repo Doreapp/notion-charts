@@ -11,7 +11,10 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching databases:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to fetch databases" },
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to fetch databases",
+      },
       { status: 500 }
     );
   }

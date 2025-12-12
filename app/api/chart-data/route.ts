@@ -34,7 +34,12 @@ export async function GET(request: NextRequest) {
     const allPages = await getAllDatabasePages(databaseId);
 
     const fieldType = fieldProperty.type;
-    const chartData = processNotionDataForChart(allPages, fieldId, fieldType, "count");
+    const chartData = processNotionDataForChart(
+      allPages,
+      fieldId,
+      fieldType,
+      "count"
+    );
 
     return NextResponse.json({
       data: chartData.data,
@@ -44,7 +49,8 @@ export async function GET(request: NextRequest) {
       totalPages: allPages.length,
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to fetch chart data";
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to fetch chart data";
     console.error("Error fetching chart data:", error);
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

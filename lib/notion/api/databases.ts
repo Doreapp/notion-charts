@@ -12,7 +12,8 @@ export async function getDatabases() {
   });
 
   const databases: NotionDatabase[] = response.results.filter(
-    (result): result is NotionDatabase => result.object === "data_source" && "title" in result
+    (result): result is NotionDatabase =>
+      result.object === "data_source" && "title" in result
   ) as NotionDatabase[];
 
   return databases;

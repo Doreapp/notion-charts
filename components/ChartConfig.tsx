@@ -21,20 +21,26 @@ interface ChartConfigProps {
   initialConfig?: ChartConfig;
 }
 
-export default function ChartConfig({ onConfigChange, initialConfig }: ChartConfigProps) {
-  const { data, isLoading, error } = useSWR<{ databases: DatabaseWithProperties[] }>(
-    "/api/databases",
-    fetcher
-  );
+export default function ChartConfig({
+  onConfigChange,
+  initialConfig,
+}: ChartConfigProps) {
+  const { data, isLoading, error } = useSWR<{
+    databases: DatabaseWithProperties[];
+  }>("/api/databases", fetcher);
   const databases = useMemo(() => data?.databases, [data]);
 
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string>(
     initialConfig?.databaseId || ""
   );
-  const [selectedFieldId, setSelectedFieldId] = useState<string>(initialConfig?.fieldId || "");
+  const [selectedFieldId, setSelectedFieldId] = useState<string>(
+    initialConfig?.fieldId || ""
+  );
 
   const properties = useMemo(() => {
-    return databases?.find((db) => db.id === selectedDatabaseId)?.properties || [];
+    return (
+      databases?.find((db) => db.id === selectedDatabaseId)?.properties || []
+    );
   }, [databases, selectedDatabaseId]);
 
   const handleDatabaseChange = (databaseId: string) => {
@@ -105,7 +111,9 @@ export default function ChartConfig({ onConfigChange, initialConfig }: ChartConf
           >
             {properties.length === 0 ? (
               <MenuItem disabled>
-                {selectedDatabaseId ? "No properties available" : "Select a database first"}
+                {selectedDatabaseId
+                  ? "No properties available"
+                  : "Select a database first"}
               </MenuItem>
             ) : (
               properties.map((prop) => (

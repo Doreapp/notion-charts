@@ -56,7 +56,10 @@ export default function ChartWidget() {
           overflow: "auto",
         }}
       >
-        <ChartConfig onConfigChange={handleConfigChange} initialConfig={config || undefined} />
+        <ChartConfig
+          onConfigChange={handleConfigChange}
+          initialConfig={config || undefined}
+        />
       </Box>
     );
   }
