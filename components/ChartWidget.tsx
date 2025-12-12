@@ -1,32 +1,20 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Box, CircularProgress, Alert, IconButton } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ChartConfig from "./ChartConfig";
-import LineChart from "./charts/LineChart";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
-
-interface ChartDataPoint {
-  name: string;
-  value: number;
-}
-
-interface ChartDataResponse {
-  data: ChartDataPoint[];
-  xAxisLabel?: string;
-  yAxisLabel?: string;
-  fieldType?: string;
-  totalPages?: number;
-}
+import ChartDisplay from "./ChartDisplay";
 
 export default function ChartWidget() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isInIframe, setIsInIframe] = useState(false);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const isInIframe = useMemo(() => window.self !== window.top, []);
+
   const [config, setConfig] = useState<ChartConfigType | null>(() => {
     const databaseId = searchParams.get("database_id");
     const fieldId = searchParams.get("field_id");
@@ -41,9 +29,6 @@ export default function ChartWidget() {
     return null;
   });
   const [showConfig, setShowConfig] = useState(false);
-  const [chartData, setChartData] = useState<ChartDataResponse | null>(null);
-  const [loadingData, setLoadingData] = useState(false);
-  const [dataError, setDataError] = useState<string | null>(null);
 
   const handleConfigChange = (newConfig: ChartConfigType) => {
     setConfig(newConfig);
@@ -52,69 +37,11 @@ export default function ChartWidget() {
     const params = new URLSearchParams();
     params.set("database_id", newConfig.databaseId);
     params.set("field_id", newConfig.fieldId);
-    router.push(`/embed?${params.toString()}`);
+    router.push(`/?${params.toString()}`);
   };
 
   const handleEditConfig = () => {
     setShowConfig(true);
-  };
-
-  useEffect(() => {
-    setIsInIframe(window.self !== window.top);
-  }, []);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const updateSize = () => {
-      if (containerRef.current) {
-        setContainerSize({
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight,
-        });
-      }
-    };
-
-    updateSize();
-
-    const resizeObserver = new ResizeObserver(updateSize);
-    resizeObserver.observe(containerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (config && !showConfig) {
-      fetchChartData();
-    }
-  }, [config, showConfig]);
-
-  const fetchChartData = async () => {
-    if (!config) return;
-
-    try {
-      setLoadingData(true);
-      setDataError(null);
-
-      const params = new URLSearchParams();
-      params.set("database_id", config.databaseId);
-      params.set("field_id", config.fieldId);
-
-      const response = await fetch(`/api/chart-data?${params.toString()}`);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch chart data");
-      }
-
-      const data = await response.json();
-      setChartData(data);
-    } catch (err: any) {
-      setDataError(err.message || "Failed to load chart data");
-    } finally {
-      setLoadingData(false);
-    }
   };
 
   if (!config || showConfig) {
@@ -136,12 +63,7 @@ export default function ChartWidget() {
 
   if (!config) {
     return (
-      <Box
-        sx={{
-          p: 2,
-          width: "100%",
-        }}
-      >
+      <Box sx={{ p: 2, width: "100%" }}>
         <Alert severity="info">Please configure the chart</Alert>
       </Box>
     );
@@ -170,8 +92,6 @@ export default function ChartWidget() {
             top: 4,
             left: 4,
             zIndex: 10,
-            backgroundColor: "background.paper",
-            boxShadow: 1,
             "&:hover": {
               backgroundColor: "action.hover",
             },
@@ -182,65 +102,7 @@ export default function ChartWidget() {
         </IconButton>
       )}
 
-      {loadingData && (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      )}
-
-      {dataError && (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            p: 2,
-          }}
-        >
-          <Alert severity="error">{dataError}</Alert>
-        </Box>
-      )}
-
-      {chartData && !loadingData && !dataError && (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-            width: "100%",
-            height: "100%",
-          }}
-        >
-          {chartData.data.length === 0 ? (
-            <Box
-              sx={{
-                flex: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Alert severity="info">No data available</Alert>
-            </Box>
-          ) : (
-            <LineChart
-              data={chartData.data}
-              xAxisLabel={chartData.xAxisLabel}
-              yAxisLabel={chartData.yAxisLabel}
-              fieldType={chartData.fieldType}
-            />
-          )}
-        </Box>
-      )}
+      <ChartDisplay config={config} />
     </Box>
   );
 }

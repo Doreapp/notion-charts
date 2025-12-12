@@ -1,29 +1,17 @@
 import { NextResponse } from "next/server";
-import { notionClient } from "@/lib/notion";
+import { getDatabases } from "@/lib/notion/api/databases";
+import { parseDatabase } from "@/lib/parsers/database";
 
 export async function GET() {
   try {
-    const response = await notionClient.search({
-      filter: {
-        property: "object",
-        value: "data_source",
-      },
-    });
+    const databases = await getDatabases();
+    const parsedDatabases = databases.map(parseDatabase);
 
-    const databases = response.results.map((result: any) => {
-      const title = result.title?.[0]?.plain_text || "Untitled";
-      return {
-        id: result.id,
-        title,
-        url: result.url,
-      };
-    });
-
-    return NextResponse.json({ databases });
-  } catch (error: any) {
+    return NextResponse.json({ databases: parsedDatabases });
+  } catch (error) {
     console.error("Error fetching databases:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to fetch databases" },
+      { error: error instanceof Error ? error.message : "Failed to fetch databases" },
       { status: 500 }
     );
   }

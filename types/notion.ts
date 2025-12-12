@@ -1,14 +1,18 @@
-export interface NotionDatabase {
+export interface Database {
   id: string;
   title: string;
   url: string;
 }
 
-export interface NotionProperty {
+export interface Property {
   id: string;
   name: string;
   type: string;
 }
+
+export type DatabaseWithProperties = Database & {
+  properties: Property[];
+};
 
 export interface ChartConfig {
   databaseId: string;
