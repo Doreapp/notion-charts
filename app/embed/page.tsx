@@ -66,6 +66,11 @@ export default function EmbedPage() {
             lineHeight: 1.5,
             color: "rgba(255, 255, 255, 0.65)",
           },
+          body1: {
+            fontSize: "14px",
+            lineHeight: 1.5,
+            color: "rgba(255, 255, 255, 0.65)",
+          },
         },
         shape: {
           borderRadius: 3,
@@ -129,6 +134,7 @@ export default function EmbedPage() {
                 backgroundColor: "#1F1F1F",
                 border: "1px solid rgba(255, 255, 255, 0.09)",
                 boxShadow: "rgba(0, 0, 0, 0.3) 0px 0px 0px 1px, rgba(0, 0, 0, 0.3) 0px 2px 4px",
+                padding: "16px",
               },
             },
           },
