@@ -6,7 +6,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { Box, CircularProgress } from "@mui/material";
 import ChartWidget from "@/components/ChartWidget";
 import "./embed.css";
-import { useNotionTheme } from "../hooks/use-notion-theme";
+import { useNotionTheme } from "@/hooks/use-notion-theme";
 
 function LoadingFallback() {
   return (
