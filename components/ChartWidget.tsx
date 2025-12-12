@@ -92,8 +92,6 @@ export default function ChartWidget() {
             top: 4,
             left: 4,
             zIndex: 10,
-            backgroundColor: "background.paper",
-            boxShadow: 1,
             "&:hover": {
               backgroundColor: "action.hover",
             },
