@@ -1,6 +1,13 @@
 "use client";
 
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 import type { ChartDataPoint } from "@/lib/chart-processor";
 
 interface LineChartProps {
@@ -16,13 +23,24 @@ export default function LineChart({ data, xAxisLabel, yAxisLabel }: LineChartPro
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <RechartsLineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" label={{ value: xAxisLabel, position: "insideBottom", offset: -5 }} />
-        <YAxis label={{ value: yAxisLabel, angle: -90, position: "insideLeft" }} />
-        <Line type="monotone" dataKey="value" stroke="#1976d2" strokeWidth={2} />
+      <RechartsLineChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 30 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+        <XAxis
+          dataKey="name"
+          tick={{ fontSize: 12 }}
+          label={{
+            value: xAxisLabel,
+            position: "insideBottom",
+            offset: -5,
+            style: { fontSize: 12 },
+          }}
+        />
+        <YAxis
+          tick={{ fontSize: 12 }}
+          label={{ value: yAxisLabel, angle: -90, position: "insideLeft", style: { fontSize: 12 } }}
+        />
+        <Line type="monotone" dataKey="value" stroke="#1976d2" strokeWidth={2} dot={false} />
       </RechartsLineChart>
     </ResponsiveContainer>
   );
 }
-

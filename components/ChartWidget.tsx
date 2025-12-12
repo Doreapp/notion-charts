@@ -1,8 +1,9 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { Box, CircularProgress, Alert, Typography, Button } from "@mui/material";
+import { useState, useEffect, useRef } from "react";
+import { Box, CircularProgress, Alert, IconButton } from "@mui/material";
+import SettingsIcon from "@mui/icons-material/Settings";
 import ChartConfig from "./ChartConfig";
 import LineChart from "./charts/LineChart";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
@@ -23,6 +24,9 @@ interface ChartDataResponse {
 export default function ChartWidget() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isInIframe, setIsInIframe] = useState(false);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [config, setConfig] = useState<ChartConfigType | null>(() => {
     const databaseId = searchParams.get("database_id");
     const fieldId = searchParams.get("field_id");
@@ -54,6 +58,32 @@ export default function ChartWidget() {
   const handleEditConfig = () => {
     setShowConfig(true);
   };
+
+  useEffect(() => {
+    setIsInIframe(window.self !== window.top);
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const updateSize = () => {
+      if (containerRef.current) {
+        setContainerSize({
+          width: containerRef.current.offsetWidth,
+          height: containerRef.current.offsetHeight,
+        });
+      }
+    };
+
+    updateSize();
+
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (config && !showConfig) {
@@ -119,42 +149,46 @@ export default function ChartWidget() {
 
   return (
     <Box
+      ref={containerRef}
       sx={{
         width: "100%",
         height: "100%",
-        minHeight: "400px",
-        p: 2,
+        minHeight: isInIframe ? "100%" : "400px",
+        p: isInIframe ? 1 : 2,
         boxSizing: "border-box",
-        overflow: "auto",
+        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
+        position: "relative",
       }}
     >
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-        <Typography variant="h6">Chart</Typography>
-        <Button variant="outlined" size="small" onClick={handleEditConfig}>
-          Edit Configuration
-        </Button>
-      </Box>
-
-      <Typography variant="body2" color="text.secondary" gutterBottom>
-        Database ID: {config.databaseId}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" gutterBottom>
-        Field ID: {config.fieldId}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" gutterBottom>
-        Chart Type: {config.chartType} | Aggregation: {config.aggregation}
-      </Typography>
+      {isInIframe && (
+        <IconButton
+          onClick={handleEditConfig}
+          sx={{
+            position: "absolute",
+            top: 4,
+            right: 4,
+            zIndex: 10,
+            backgroundColor: "background.paper",
+            boxShadow: 1,
+            "&:hover": {
+              backgroundColor: "action.hover",
+            },
+          }}
+          size="small"
+        >
+          <SettingsIcon fontSize="small" />
+        </IconButton>
+      )}
 
       {loadingData && (
         <Box
           sx={{
-            mt: 3,
+            flex: 1,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            minHeight: "300px",
           }}
         >
           <CircularProgress />
@@ -162,7 +196,15 @@ export default function ChartWidget() {
       )}
 
       {dataError && (
-        <Box sx={{ mt: 3 }}>
+        <Box
+          sx={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            p: 2,
+          }}
+        >
           <Alert severity="error">{dataError}</Alert>
         </Box>
       )}
@@ -170,29 +212,32 @@ export default function ChartWidget() {
       {chartData && !loadingData && !dataError && (
         <Box
           sx={{
-            mt: 3,
             flex: 1,
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
+            width: "100%",
+            height: "100%",
           }}
         >
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Total pages: {chartData.totalPages || 0} | Data points: {chartData.data.length}
-          </Typography>
-          <Box sx={{ flex: 1, minHeight: 300, mt: 2 }}>
-            {chartData.data.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 4 }}>
-                No data available
-              </Typography>
-            ) : (
-              <LineChart
-                data={chartData.data}
-                xAxisLabel={chartData.xAxisLabel}
-                yAxisLabel={chartData.yAxisLabel}
-              />
-            )}
-          </Box>
+          {chartData.data.length === 0 ? (
+            <Box
+              sx={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Alert severity="info">No data available</Alert>
+            </Box>
+          ) : (
+            <LineChart
+              data={chartData.data}
+              xAxisLabel={chartData.xAxisLabel}
+              yAxisLabel={chartData.yAxisLabel}
+            />
+          )}
         </Box>
       )}
     </Box>
