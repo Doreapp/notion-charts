@@ -10,15 +10,19 @@ Proof-of-concept a system to embed charts in Notion, using data from Notion data
 
 ## Example
 
-![Chart example](./docs/screenshot.png)
+![Configuration](./docs/config.png)
+
+---
+
+![Graph](./docs/graph.png)
 
 ## How to use
 
 ### 1. Clone this repository
 
 ```bash
-git clone ...
-cd ...
+git clone git@github.com:Doreapp/notion-charts.git
+cd notion-charts
 ```
 
 ### 2. Create a Notion integration
