@@ -168,7 +168,7 @@ export default function ChartWidget() {
           sx={{
             position: "absolute",
             top: 4,
-            right: 4,
+            left: 4,
             zIndex: 10,
             backgroundColor: "background.paper",
             boxShadow: 1,
