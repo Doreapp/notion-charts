@@ -17,7 +17,7 @@ todos:
       - setup
   - id: config-ui
     content: Build chart configuration UI component for database/field selection and chart type
-    status: pending
+    status: completed
     dependencies:
       - widget
   - id: data-api
