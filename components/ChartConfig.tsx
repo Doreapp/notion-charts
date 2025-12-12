@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Box,
   FormControl,
@@ -8,12 +8,13 @@ import {
   Select,
   MenuItem,
   Button,
-  CircularProgress,
   Alert,
   Typography,
   Paper,
 } from "@mui/material";
-import type { Database, Property, ChartConfig } from "@/types/notion";
+import type { ChartConfig, DatabaseWithProperties } from "@/types/notion";
+import useSWR from "swr";
+import { fetcher } from "@/utils/fetcher";
 
 interface ChartConfigProps {
   onConfigChange: (config: ChartConfig) => void;
@@ -21,62 +22,20 @@ interface ChartConfigProps {
 }
 
 export default function ChartConfig({ onConfigChange, initialConfig }: ChartConfigProps) {
-  const [databases, setDatabases] = useState<Database[]>([]);
-  const [properties, setProperties] = useState<Property[]>([]);
+  const { data, isLoading, error } = useSWR<{ databases: DatabaseWithProperties[] }>(
+    "/api/databases",
+    fetcher
+  );
+  const databases = useMemo(() => data?.databases, [data]);
+
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string>(
     initialConfig?.databaseId || ""
   );
   const [selectedFieldId, setSelectedFieldId] = useState<string>(initialConfig?.fieldId || "");
-  const [loadingDatabases, setLoadingDatabases] = useState(true);
-  const [loadingProperties, setLoadingProperties] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchDatabases();
-  }, []);
-
-  useEffect(() => {
-    if (selectedDatabaseId) {
-      fetchProperties(selectedDatabaseId);
-    } else {
-      setProperties([]);
-      setSelectedFieldId("");
-    }
-  }, [selectedDatabaseId]);
-
-  const fetchDatabases = async () => {
-    try {
-      setLoadingDatabases(true);
-      setError(null);
-      const response = await fetch("/api/databases");
-      if (!response.ok) {
-        throw new Error("Failed to fetch databases");
-      }
-      const data = await response.json();
-      setDatabases(data.databases);
-    } catch (err: any) {
-      setError(err.message || "Failed to load databases");
-    } finally {
-      setLoadingDatabases(false);
-    }
-  };
-
-  const fetchProperties = async (databaseId: string) => {
-    try {
-      setLoadingProperties(true);
-      setError(null);
-      const response = await fetch(`/api/databases/${databaseId}/properties`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch database properties");
-      }
-      const data = await response.json();
-      setProperties(data.properties);
-    } catch (err: any) {
-      setError(err.message || "Failed to load database properties");
-    } finally {
-      setLoadingProperties(false);
-    }
-  };
+  const properties = useMemo(() => {
+    return databases?.find((db) => db.id === selectedDatabaseId)?.properties || [];
+  }, [databases, selectedDatabaseId]);
 
   const handleDatabaseChange = (databaseId: string) => {
     setSelectedDatabaseId(databaseId);
@@ -108,50 +67,43 @@ export default function ChartConfig({ onConfigChange, initialConfig }: ChartConf
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
-        <FormControl fullWidth disabled={loadingDatabases}>
+        <FormControl fullWidth disabled={isLoading}>
           <InputLabel>Database</InputLabel>
           <Select
-            value={selectedDatabaseId}
+            value={isLoading ? "loading" : selectedDatabaseId}
             label="Database"
             onChange={(e) => handleDatabaseChange(e.target.value)}
             size="small"
           >
-            {loadingDatabases ? (
-              <MenuItem disabled>
-                <CircularProgress size={20} sx={{ mr: 1 }} />
+            {isLoading && (
+              <MenuItem disabled value="loading">
                 Loading databases...
               </MenuItem>
-            ) : (
-              databases.map((db) => (
-                <MenuItem key={db.id} value={db.id}>
-                  {db.title}
-                </MenuItem>
-              ))
             )}
+            {databases?.map((db) => (
+              <MenuItem key={db.id} value={db.id}>
+                {db.title}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
-        <FormControl fullWidth disabled={!selectedDatabaseId || loadingProperties}>
+        <FormControl fullWidth disabled={!selectedDatabaseId || isLoading}>
           <InputLabel>Field</InputLabel>
           <Select
             value={selectedFieldId}
             label="Field"
             onChange={(e) => handleFieldChange(e.target.value)}
-            disabled={!selectedDatabaseId || loadingProperties}
+            disabled={!selectedDatabaseId || isLoading}
             size="small"
           >
-            {loadingProperties ? (
-              <MenuItem disabled>
-                <CircularProgress size={20} sx={{ mr: 1 }} />
-                Loading properties...
-              </MenuItem>
-            ) : properties.length === 0 ? (
+            {properties.length === 0 ? (
               <MenuItem disabled>
                 {selectedDatabaseId ? "No properties available" : "Select a database first"}
               </MenuItem>
