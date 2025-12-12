@@ -22,7 +22,7 @@ todos:
       - widget
   - id: data-api
     content: Create /api/chart-data endpoint to fetch and process Notion database data
-    status: pending
+    status: completed
     dependencies:
       - notion-client
   - id: charts

@@ -1,0 +1,62 @@
+import { NextRequest, NextResponse } from "next/server";
+import { notionClient } from "@/lib/notion";
+import { processNotionDataForChart } from "@/lib/chart-processor";
+
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const databaseId = searchParams.get("database_id");
+    const fieldId = searchParams.get("field_id");
+
+    if (!databaseId || !fieldId) {
+      return NextResponse.json(
+        { error: "Missing required parameters: database_id and field_id" },
+        { status: 400 }
+      );
+    }
+
+    const database = (await notionClient.dataSources.retrieve({
+      data_source_id: databaseId,
+    })) as unknown as { properties: Record<string, { type: string }> };
+
+    const fieldProperty = database.properties[fieldId];
+    if (!fieldProperty) {
+      return NextResponse.json(
+        { error: `Field ${fieldId} not found in database` },
+        { status: 404 }
+      );
+    }
+
+    const fieldType = fieldProperty.type;
+
+    let allPages: Array<Record<string, unknown>> = [];
+    let hasMore = true;
+    let startCursor: string | undefined = undefined;
+
+    while (hasMore) {
+      const response = await notionClient.dataSources.query({
+        data_source_id: databaseId,
+        start_cursor: startCursor,
+        page_size: 100,
+      });
+
+      allPages = allPages.concat(response.results);
+      hasMore = response.has_more;
+      startCursor = response.next_cursor || undefined;
+    }
+
+    const chartData = processNotionDataForChart(allPages, fieldId, fieldType, "count");
+
+    return NextResponse.json({
+      data: chartData.data,
+      xAxisLabel: chartData.xAxisLabel,
+      yAxisLabel: chartData.yAxisLabel,
+      fieldType,
+      totalPages: allPages.length,
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Failed to fetch chart data";
+    console.error("Error fetching chart data:", error);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
+}

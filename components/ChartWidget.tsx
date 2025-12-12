@@ -1,10 +1,23 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, CircularProgress, Alert, Typography, Button } from "@mui/material";
 import ChartConfig from "./ChartConfig";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
+
+interface ChartDataPoint {
+  name: string;
+  value: number;
+}
+
+interface ChartDataResponse {
+  data: ChartDataPoint[];
+  xAxisLabel?: string;
+  yAxisLabel?: string;
+  fieldType?: string;
+  totalPages?: number;
+}
 
 export default function ChartWidget() {
   const searchParams = useSearchParams();
@@ -23,6 +36,9 @@ export default function ChartWidget() {
     return null;
   });
   const [showConfig, setShowConfig] = useState(false);
+  const [chartData, setChartData] = useState<ChartDataResponse | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   const handleConfigChange = (newConfig: ChartConfigType) => {
     setConfig(newConfig);
@@ -36,6 +52,38 @@ export default function ChartWidget() {
 
   const handleEditConfig = () => {
     setShowConfig(true);
+  };
+
+  useEffect(() => {
+    if (config && !showConfig) {
+      fetchChartData();
+    }
+  }, [config, showConfig]);
+
+  const fetchChartData = async () => {
+    if (!config) return;
+
+    try {
+      setLoadingData(true);
+      setDataError(null);
+
+      const params = new URLSearchParams();
+      params.set("database_id", config.databaseId);
+      params.set("field_id", config.fieldId);
+
+      const response = await fetch(`/api/chart-data?${params.toString()}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch chart data");
+      }
+
+      const data = await response.json();
+      setChartData(data);
+    } catch (err: any) {
+      setDataError(err.message || "Failed to load chart data");
+    } finally {
+      setLoadingData(false);
+    }
   };
 
   if (!config || showConfig) {
@@ -98,23 +146,55 @@ export default function ChartWidget() {
         Chart Type: {config.chartType} | Aggregation: {config.aggregation}
       </Typography>
 
-      <Box
-        sx={{
-          mt: 3,
-          p: 2,
-          border: "1px dashed",
-          borderColor: "divider",
-          borderRadius: 1,
-          textAlign: "center",
-          color: "text.secondary",
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        Chart will be rendered here
-      </Box>
+      {loadingData && (
+        <Box
+          sx={{
+            mt: 3,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "300px",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
+
+      {dataError && (
+        <Box sx={{ mt: 3 }}>
+          <Alert severity="error">{dataError}</Alert>
+        </Box>
+      )}
+
+      {chartData && !loadingData && !dataError && (
+        <Box
+          sx={{
+            mt: 3,
+            p: 2,
+            border: "1px dashed",
+            borderColor: "divider",
+            borderRadius: 1,
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Total pages: {chartData.totalPages || 0} | Data points: {chartData.data.length}
+          </Typography>
+          <Box sx={{ mt: 2, flex: 1, overflow: "auto" }}>
+            {chartData.data.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                No data available
+              </Typography>
+            ) : (
+              <Box component="pre" sx={{ fontSize: "0.75rem", overflow: "auto" }}>
+                {JSON.stringify(chartData.data, null, 2)}
+              </Box>
+            )}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }
