@@ -1,10 +1,10 @@
-export interface Database {
+interface Database {
   id: string;
   title: string;
   url: string;
 }
 
-export interface Property {
+interface Property {
   id: string;
   name: string;
   type: string;

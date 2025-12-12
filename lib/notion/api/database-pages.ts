@@ -1,7 +1,10 @@
 import { PageObjectResponse } from "@notionhq/client";
 import { notionClient } from "../client";
 
-export async function getAllDatabasePages(databaseId: string, limit: number = -1) {
+export async function getAllDatabasePages(
+  databaseId: string,
+  limit: number = -1
+) {
   let allPages: Array<PageObjectResponse> = [];
   let hasMore = true;
   let startCursor: string | undefined = undefined;

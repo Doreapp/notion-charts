@@ -113,7 +113,8 @@ export function useNotionTheme() {
               root: {
                 backgroundColor: "#252525",
                 border: "1px solid rgba(255, 255, 255, 0.09)",
-                boxShadow: "rgba(0, 0, 0, 0.3) 0px 0px 0px 1px, rgba(0, 0, 0, 0.3) 0px 2px 4px",
+                boxShadow:
+                  "rgba(0, 0, 0, 0.3) 0px 0px 0px 1px, rgba(0, 0, 0, 0.3) 0px 2px 4px",
                 padding: "14px 16px !important",
                 borderRadius: "10px",
                 backgroundImage: "none",
