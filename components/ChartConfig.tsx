@@ -102,7 +102,7 @@ export default function ChartConfig({ onConfigChange, initialConfig }: ChartConf
   const isConfigValid = selectedDatabaseId && selectedFieldId;
 
   return (
-    <Paper sx={{ p: 3, maxWidth: 600, mx: "auto", mt: 2 }}>
+    <Paper sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
       <Typography variant="h6" gutterBottom>
         Configure Chart
       </Typography>
@@ -113,13 +113,14 @@ export default function ChartConfig({ onConfigChange, initialConfig }: ChartConf
         </Alert>
       )}
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
         <FormControl fullWidth disabled={loadingDatabases}>
           <InputLabel>Database</InputLabel>
           <Select
             value={selectedDatabaseId}
             label="Database"
             onChange={(e) => handleDatabaseChange(e.target.value)}
+            size="small"
           >
             {loadingDatabases ? (
               <MenuItem disabled>
@@ -143,6 +144,7 @@ export default function ChartConfig({ onConfigChange, initialConfig }: ChartConf
             label="Field"
             onChange={(e) => handleFieldChange(e.target.value)}
             disabled={!selectedDatabaseId || loadingProperties}
+            size="small"
           >
             {loadingProperties ? (
               <MenuItem disabled>
@@ -163,7 +165,13 @@ export default function ChartConfig({ onConfigChange, initialConfig }: ChartConf
           </Select>
         </FormControl>
 
-        <Button variant="contained" onClick={handleApply} disabled={!isConfigValid} sx={{ mt: 2 }}>
+        <Button
+          variant="contained"
+          onClick={handleApply}
+          disabled={!isConfigValid}
+          size="small"
+          sx={{ alignSelf: "flex-end" }}
+        >
           Apply Configuration
         </Button>
       </Box>
