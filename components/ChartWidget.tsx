@@ -1,8 +1,8 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect, useRef, useMemo } from "react";
-import { Box, CircularProgress, Alert, IconButton } from "@mui/material";
+import { useState, useRef, useMemo } from "react";
+import { Box, Alert, IconButton } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ChartConfig from "./ChartConfig";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
