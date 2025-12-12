@@ -6,8 +6,8 @@ export function parseDatabase(database: NotionDatabase): DatabaseWithProperties 
     id: database.id,
     title: database.title[0]?.plain_text ?? "Untitled",
     url: database.url,
-    properties: Object.values(database.properties).map((property) => ({
-      id: property.id,
+    properties: Object.entries(database.properties).map(([id, property]) => ({
+      id,
       name: property.name,
       type: property.type,
     })),
