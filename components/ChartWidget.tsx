@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Box, CircularProgress, Alert, Typography, Button } from "@mui/material";
 import ChartConfig from "./ChartConfig";
+import LineChart from "./charts/LineChart";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
 
 interface ChartDataPoint {
@@ -170,27 +171,26 @@ export default function ChartWidget() {
         <Box
           sx={{
             mt: 3,
-            p: 2,
-            border: "1px dashed",
-            borderColor: "divider",
-            borderRadius: 1,
             flex: 1,
             display: "flex",
             flexDirection: "column",
+            minHeight: 0,
           }}
         >
           <Typography variant="body2" color="text.secondary" gutterBottom>
             Total pages: {chartData.totalPages || 0} | Data points: {chartData.data.length}
           </Typography>
-          <Box sx={{ mt: 2, flex: 1, overflow: "auto" }}>
+          <Box sx={{ flex: 1, minHeight: 300, mt: 2 }}>
             {chartData.data.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" textAlign="center">
+              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 4 }}>
                 No data available
               </Typography>
             ) : (
-              <Box component="pre" sx={{ fontSize: "0.75rem", overflow: "auto" }}>
-                {JSON.stringify(chartData.data, null, 2)}
-              </Box>
+              <LineChart
+                data={chartData.data}
+                xAxisLabel={chartData.xAxisLabel}
+                yAxisLabel={chartData.yAxisLabel}
+              />
             )}
           </Box>
         </Box>

@@ -27,7 +27,7 @@ todos:
       - notion-client
   - id: charts
     content: Implement chart components (Line, Bar, Pie) using recharts with MUI styling
-    status: pending
+    status: completed
     dependencies:
       - widget
   - id: integration
