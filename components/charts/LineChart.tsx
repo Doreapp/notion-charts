@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import type { ChartDataPoint } from "@/lib/chart-processor";
+import type { ChartDataPoint } from "@/lib/notion/chart-processor";
 
 interface LineChartProps {
   data: ChartDataPoint[];

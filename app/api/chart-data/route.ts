@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { notionClient } from "@/lib/notion";
-import { processNotionDataForChart } from "@/lib/chart-processor";
-import { PageObjectResponse } from "@notionhq/client";
+import { notionClient } from "@/lib/notion/client";
+import { processNotionDataForChart } from "@/lib/notion/chart-processor";
+import { getAllDatabasePages } from "@/lib/notion/api/database-pages";
 
+/**
+ * API route to fetch chart data from a Notion database.
+ */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -28,24 +31,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const allPages = await getAllDatabasePages(databaseId);
+
     const fieldType = fieldProperty.type;
-
-    let allPages: Array<PageObjectResponse> = [];
-    let hasMore = true;
-    let startCursor: string | undefined = undefined;
-
-    while (hasMore) {
-      const response = await notionClient.dataSources.query({
-        data_source_id: databaseId,
-        start_cursor: startCursor,
-        page_size: 100,
-      });
-
-      allPages = allPages.concat(response.results as PageObjectResponse[]);
-      hasMore = response.has_more;
-      startCursor = response.next_cursor || undefined;
-    }
-
     const chartData = processNotionDataForChart(allPages, fieldId, fieldType, "count");
 
     return NextResponse.json({
