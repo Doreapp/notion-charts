@@ -36,8 +36,8 @@ export function useNotionTheme() {
           fontFamily:
             '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"',
           h6: {
-            fontSize: "14px",
-            fontWeight: 600,
+            fontSize: "12px",
+            fontWeight: 500,
             lineHeight: 1.5,
             color: "#FFFFFF",
           },
@@ -49,11 +49,11 @@ export function useNotionTheme() {
           body1: {
             fontSize: "14px",
             lineHeight: 1.5,
-            color: "rgba(255, 255, 255, 0.65)",
+            color: "#f0efed",
           },
         },
         shape: {
-          borderRadius: 3,
+          borderRadius: "6px",
         },
         shadows: [
           "none",
@@ -89,11 +89,11 @@ export function useNotionTheme() {
                 textTransform: "none",
                 fontWeight: 500,
                 fontSize: "14px",
-                padding: "4px 12px",
-                borderRadius: "3px",
+                padding: "4px 8px",
                 boxShadow: "none",
                 "&:hover": {
                   boxShadow: "none",
+                  backgroundColor: "#2892F7",
                 },
               },
             },
@@ -111,10 +111,12 @@ export function useNotionTheme() {
           MuiPaper: {
             styleOverrides: {
               root: {
-                backgroundColor: "#1F1F1F",
+                backgroundColor: "#252525",
                 border: "1px solid rgba(255, 255, 255, 0.09)",
                 boxShadow: "rgba(0, 0, 0, 0.3) 0px 0px 0px 1px, rgba(0, 0, 0, 0.3) 0px 2px 4px",
-                padding: "16px",
+                padding: "14px 16px !important",
+                borderRadius: "10px",
+                backgroundImage: "none",
               },
             },
           },
@@ -123,6 +125,51 @@ export function useNotionTheme() {
               root: {
                 borderRadius: "3px",
                 fontSize: "14px",
+              },
+            },
+          },
+          MuiOutlinedInput: {
+            styleOverrides: {
+              notchedOutline: {
+                border: "none",
+                backgroundColor: "rgba(255, 255, 255, 0.055)",
+                borderRadius: "6px",
+              },
+            },
+          },
+          MuiSelect: {
+            styleOverrides: {
+              select: {},
+            },
+          },
+          MuiMenu: {
+            styleOverrides: {
+              paper: {
+                padding: "6px !important",
+              },
+              list: {
+                padding: "0px !important",
+              },
+            },
+          },
+          MuiMenuItem: {
+            styleOverrides: {
+              root: {
+                padding: "4px 8px",
+                borderRadius: "6px",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                },
+              },
+            },
+          },
+          MuiInputLabel: {
+            styleOverrides: {
+              shrink: {
+                display: "none",
+              },
+              root: {
+                color: "rgba(255, 255, 255, 0.65)",
               },
             },
           },
