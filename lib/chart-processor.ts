@@ -1,3 +1,5 @@
+import { PageObjectResponse } from "@notionhq/client";
+
 export interface ChartDataPoint {
   name: string;
   value: number;
@@ -9,23 +11,8 @@ export interface ChartData {
   yAxisLabel?: string;
 }
 
-interface NotionPage {
-  properties: Record<
-    string,
-    {
-      title?: Array<{ plain_text: string }>;
-      rich_text?: Array<{ plain_text: string }>;
-      select?: { name: string };
-      multi_select?: Array<{ name: string }>;
-      number?: number;
-      date?: { start: string };
-      checkbox?: boolean;
-    }
-  >;
-}
-
 export function processNotionDataForChart(
-  pages: Array<Record<string, unknown>>,
+  pages: Array<PageObjectResponse>,
   fieldId: string,
   fieldType: string,
   aggregation: "count"
@@ -37,13 +24,12 @@ export function processNotionDataForChart(
   const valueCounts = new Map<string, number>();
 
   pages.forEach((page) => {
-    const notionPage = page as unknown as NotionPage;
-    const property = notionPage.properties?.[fieldId];
+    const property = page.properties?.[fieldId];
     if (!property) return;
 
     let value: string | null = null;
 
-    switch (fieldType) {
+    switch (property.type) {
       case "title":
         value = property.title?.[0]?.plain_text || null;
         break;
@@ -52,6 +38,9 @@ export function processNotionDataForChart(
         break;
       case "select":
         value = property.select?.name || null;
+        break;
+      case "status":
+        value = property.status?.name || null;
         break;
       case "multi_select":
         property.multi_select?.forEach((item) => {
@@ -68,7 +57,14 @@ export function processNotionDataForChart(
       case "checkbox":
         value = property.checkbox ? "Yes" : "No";
         break;
+      case "created_time":
+        value = property.created_time || null;
+        break;
+      case "last_edited_time":
+        value = property.last_edited_time || null;
+        break;
       default:
+        console.warn(`Unsupported field type: ${fieldType}`);
         value = null;
     }
 

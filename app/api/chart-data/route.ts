@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notionClient } from "@/lib/notion";
 import { processNotionDataForChart } from "@/lib/chart-processor";
+import { PageObjectResponse } from "@notionhq/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,9 +16,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const database = (await notionClient.dataSources.retrieve({
+    const database = await notionClient.dataSources.retrieve({
       data_source_id: databaseId,
-    })) as unknown as { properties: Record<string, { type: string }> };
+    });
 
     const fieldProperty = database.properties[fieldId];
     if (!fieldProperty) {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     const fieldType = fieldProperty.type;
 
-    let allPages: Array<Record<string, unknown>> = [];
+    let allPages: Array<PageObjectResponse> = [];
     let hasMore = true;
     let startCursor: string | undefined = undefined;
 
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
         page_size: 100,
       });
 
-      allPages = allPages.concat(response.results);
+      allPages = allPages.concat(response.results as PageObjectResponse[]);
       hasMore = response.has_more;
       startCursor = response.next_cursor || undefined;
     }
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: chartData.data,
-      xAxisLabel: chartData.xAxisLabel,
+      xAxisLabel: fieldProperty.name || "Value",
       yAxisLabel: chartData.yAxisLabel,
       fieldType,
       totalPages: allPages.length,
