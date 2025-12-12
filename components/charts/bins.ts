@@ -31,6 +31,10 @@ export function binDates(data: ChartDataPoint[], numBins: number): ChartDataPoin
   const binSize = dateRange / numBins;
   const bins: Map<number, number> = new Map();
 
+  Array.from({ length: numBins }).forEach((_, index) => {
+    bins.set(minTimestamp + index * binSize, 0);
+  });
+
   dateValues.forEach(({ date, value }) => {
     const binIndex = Math.min(Math.floor((date.getTime() - minTimestamp) / binSize), numBins - 1);
     const binStart = minTimestamp + binIndex * binSize;
