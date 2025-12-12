@@ -12,7 +12,7 @@ todos:
       - setup
   - id: widget
     content: Create embeddable widget page (/embed) that accepts configuration via URL params
-    status: pending
+    status: completed
     dependencies:
       - setup
   - id: config-ui
