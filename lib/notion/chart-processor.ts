@@ -5,7 +5,7 @@ export interface ChartDataPoint {
   value: number;
 }
 
-export interface ChartData {
+interface ChartData {
   data: ChartDataPoint[];
   xAxisLabel?: string;
   yAxisLabel?: string;
