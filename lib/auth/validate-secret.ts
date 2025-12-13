@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const API_SECRET_ENV = "API_SECRET";
 
-export function validateApiSecret(request: NextRequest): boolean {
+function validateApiSecret(request: NextRequest): boolean {
   const apiSecret = process.env[API_SECRET_ENV];
 
   if (!apiSecret) {
@@ -23,7 +23,7 @@ export function validateApiSecret(request: NextRequest): boolean {
   return token === apiSecret;
 }
 
-export function createUnauthorizedResponse(message?: string): NextResponse {
+function createUnauthorizedResponse(message?: string): NextResponse {
   return NextResponse.json(
     { error: message || "Unauthorized: Invalid or missing API secret" },
     { status: 401 }
