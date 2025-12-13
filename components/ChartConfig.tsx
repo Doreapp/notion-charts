@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from "react";
 import {
-  Box,
   FormControl,
   InputLabel,
   Select,
@@ -11,6 +10,7 @@ import {
   Alert,
   Typography,
   Paper,
+  Stack,
 } from "@mui/material";
 import type { ChartConfig, DatabaseWithProperties } from "@/types/notion";
 import useSWR from "swr";
@@ -86,7 +86,7 @@ export default function ChartConfig({
         </Alert>
       )}
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+      <Stack direction="column" gap={2} mt={2}>
         <FormControl fullWidth disabled={isLoading}>
           <InputLabel size="small">Database</InputLabel>
           <Select
@@ -142,7 +142,7 @@ export default function ChartConfig({
         >
           Apply Configuration
         </Button>
-      </Box>
+      </Stack>
     </Paper>
   );
 }

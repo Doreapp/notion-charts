@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, CircularProgress, Alert } from "@mui/material";
+import { CircularProgress, Alert, Stack } from "@mui/material";
 import { useEffect } from "react";
 import LineChart from "./charts/LineChart";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
@@ -46,16 +46,14 @@ export default function ChartWidget({
 
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
+      <Stack
+        direction="row"
+        justifyContent="center"
+        alignItems="center"
+        flex={1}
       >
         <CircularProgress />
-      </Box>
+      </Stack>
     );
   }
 
@@ -64,44 +62,31 @@ export default function ChartWidget({
       return null;
     }
     return (
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          p: 2,
-        }}
+      <Stack
+        direction="row"
+        justifyContent="center"
+        alignItems="center"
+        flex={1}
+        p={2}
       >
         <Alert severity="error">
           {error instanceof Error ? error.message : String(error)}
         </Alert>
-      </Box>
+      </Stack>
     );
   }
 
   return (
-    <Box
-      sx={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        minHeight: 0,
-        width: "100%",
-        height: "100%",
-      }}
-    >
+    <Stack direction="column" flex={1} minHeight={0} width="100%" height="100%">
       {!chartData || chartData.data.length === 0 ? (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+        <Stack
+          direction="row"
+          justifyContent="center"
+          alignItems="center"
+          flex={1}
         >
           <Alert severity="info">No data available</Alert>
-        </Box>
+        </Stack>
       ) : (
         <LineChart
           data={chartData.data}
@@ -110,6 +95,6 @@ export default function ChartWidget({
           fieldType={chartData.fieldType}
         />
       )}
-    </Box>
+    </Stack>
   );
 }
