@@ -1,12 +1,14 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Box, Alert, IconButton } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ChartConfig from "./ChartConfig";
+import SecretInput from "./SecretInput";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
 import ChartDisplay from "./ChartDisplay";
+import { hasSecret } from "@/utils/secret-storage";
 
 export default function ChartWidget() {
   const searchParams = useSearchParams();
@@ -14,6 +16,8 @@ export default function ChartWidget() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const isInIframe = useMemo(() => window.self !== window.top, []);
+
+  const [hasStoredSecret, setHasStoredSecret] = useState(hasSecret());
 
   const [config, setConfig] = useState<ChartConfigType | null>(() => {
     const databaseId = searchParams.get("database_id");
@@ -30,6 +34,10 @@ export default function ChartWidget() {
   });
   const [showConfig, setShowConfig] = useState(false);
 
+  const handleSecretStored = () => {
+    setHasStoredSecret(true);
+  };
+
   const handleConfigChange = (newConfig: ChartConfigType) => {
     setConfig(newConfig);
     setShowConfig(false);
@@ -43,6 +51,23 @@ export default function ChartWidget() {
   const handleEditConfig = () => {
     setShowConfig(true);
   };
+
+  if (!hasStoredSecret) {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          minHeight: "400px",
+          p: 2,
+          boxSizing: "border-box",
+          overflow: "auto",
+        }}
+      >
+        <SecretInput onSecretStored={handleSecretStored} />
+      </Box>
+    );
+  }
 
   if (!config || showConfig) {
     return (

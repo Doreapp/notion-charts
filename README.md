@@ -40,7 +40,10 @@ cd notion-charts
 cp .env.example .env.local
 ```
 
-Then open `.env.local` and paste the integration secret as `NOTION_INTEGRATION_SECRET`.
+Then open `.env.local` and:
+
+- Paste the integration secret as `NOTION_INTEGRATION_SECRET`
+- Set `API_SECRET` to a secure random string (this will be used to protect API routes)
 
 ### 4. Start the app
 
@@ -52,6 +55,8 @@ npm run dev
 ### 5. Access the app
 
 Open `http://localhost:3000` to test in a full web page.
+
+**Note:** When you first access the app, you'll be prompted to enter the API secret. Use the same value you set for `API_SECRET` in your `.env.local` file.
 
 #### Test in an actual Notion page
 
