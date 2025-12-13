@@ -3,6 +3,7 @@ import { notionClient } from "@/lib/notion/client";
 import { processNotionDataForChart } from "@/lib/notion/chart-processor";
 import { getAllDatabasePages } from "@/lib/notion/api/database-pages";
 import { withAuth } from "@/lib/auth/validate-secret";
+import type { FilterCondition } from "@/types/notion";
 
 /**
  * API route to fetch chart data from a Notion database.
@@ -18,6 +19,25 @@ async function getChartDataHandler(request: NextRequest) {
       | "asc"
       | "desc";
     const accumulate = searchParams.get("accumulate") === "true";
+    const filtersParam = searchParams.get("filters");
+
+    let filters: FilterCondition[] | undefined;
+    if (filtersParam) {
+      try {
+        filters = JSON.parse(decodeURIComponent(filtersParam));
+        if (!Array.isArray(filters)) {
+          return NextResponse.json(
+            { error: "Invalid filters format. Must be an array." },
+            { status: 400 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Failed to parse filters parameter." },
+          { status: 400 }
+        );
+      }
+    }
 
     if (!databaseId || !xAxisFieldId) {
       return NextResponse.json(
@@ -82,7 +102,27 @@ async function getChartDataHandler(request: NextRequest) {
       }
     }
 
-    const allPages = await getAllDatabasePages(databaseId);
+    if (filters && filters.length > 0) {
+      for (const filter of filters) {
+        const property = database.properties[filter.propertyId];
+        if (!property) {
+          return NextResponse.json(
+            {
+              error: `Filter property ${filter.propertyId} not found in database`,
+            },
+            { status: 400 }
+          );
+        }
+        if (property.type !== filter.propertyType) {
+          return NextResponse.json(
+            { error: `Filter property type mismatch for ${filter.propertyId}` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    const allPages = await getAllDatabasePages(databaseId, -1, filters);
 
     const xAxisFieldType = xAxisFieldProperty.type;
     const chartData = processNotionDataForChart(

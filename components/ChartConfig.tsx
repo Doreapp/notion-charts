@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   FormControl,
@@ -14,10 +14,17 @@ import {
   Stack,
   Checkbox,
   FormControlLabel,
+  Divider,
 } from "@mui/material";
-import type { ChartConfig, DatabaseWithProperties } from "@/types/notion";
+import type {
+  ChartConfig,
+  DatabaseWithProperties,
+  FilterCondition,
+} from "@/types/notion";
 import useSWR from "swr";
 import { fetcher, UnauthorizedError } from "@/utils/fetcher";
+import FilterChipList from "./FilterChipList";
+import FilterConditionForm from "./FilterConditionForm";
 
 interface ChartConfigProps {
   onConfigChange: (config: ChartConfig) => void;
@@ -32,6 +39,7 @@ interface FormValues {
   aggregation: "count" | "sum" | "avg";
   sortOrder: "asc" | "desc";
   accumulate: boolean;
+  filters: FilterCondition[];
 }
 
 export default function ChartConfig({
@@ -39,6 +47,11 @@ export default function ChartConfig({
   initialConfig,
   onAuthError,
 }: ChartConfigProps) {
+  const [filters, setFilters] = useState<FilterCondition[]>(
+    initialConfig?.filters || []
+  );
+  const [showFilterForm, setShowFilterForm] = useState(false);
+
   const { data, isLoading, error } = useSWR<{
     databases: DatabaseWithProperties[];
   }>("/api/databases", fetcher);
@@ -56,6 +69,7 @@ export default function ChartConfig({
     watch,
     setValue,
     formState: { isValid },
+    reset,
   } = useForm<FormValues>({
     defaultValues: {
       databaseId: initialConfig?.databaseId || "",
@@ -64,9 +78,25 @@ export default function ChartConfig({
       aggregation: initialConfig?.aggregation || "count",
       sortOrder: initialConfig?.sortOrder || "asc",
       accumulate: initialConfig?.accumulate || false,
+      filters: initialConfig?.filters || [],
     },
     mode: "onChange",
   });
+
+  useEffect(() => {
+    if (initialConfig) {
+      reset({
+        databaseId: initialConfig.databaseId,
+        xAxisFieldId: initialConfig.xAxisFieldId,
+        yAxisFieldId: initialConfig.yAxisFieldId || "",
+        aggregation: initialConfig.aggregation,
+        sortOrder: initialConfig.sortOrder || "asc",
+        accumulate: initialConfig.accumulate || false,
+        filters: initialConfig.filters || [],
+      });
+      setFilters(initialConfig.filters || []);
+    }
+  }, [initialConfig, reset]);
 
   const selectedDatabaseId = watch("databaseId");
   const aggregation = watch("aggregation");
@@ -94,6 +124,15 @@ export default function ChartConfig({
     }
   }, [aggregation, setValue]);
 
+  const handleAddFilter = (condition: FilterCondition) => {
+    setFilters([...filters, condition]);
+    setShowFilterForm(false);
+  };
+
+  const handleDeleteFilter = (index: number) => {
+    setFilters(filters.filter((_, i) => i !== index));
+  };
+
   const onSubmit = (data: FormValues) => {
     const config: ChartConfig = {
       databaseId: data.databaseId,
@@ -104,6 +143,7 @@ export default function ChartConfig({
       aggregation: data.aggregation,
       sortOrder: data.sortOrder,
       accumulate: data.accumulate,
+      filters: filters.length > 0 ? filters : undefined,
     };
     onConfigChange(config);
   };
@@ -286,6 +326,32 @@ export default function ChartConfig({
               />
             )}
           />
+
+          <Divider />
+
+          <Typography variant="subtitle2">Filters</Typography>
+          <FilterChipList
+            filters={filters}
+            properties={properties}
+            onDelete={handleDeleteFilter}
+          />
+          {!showFilterForm && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setShowFilterForm(true)}
+              disabled={!selectedDatabaseId || isLoading}
+            >
+              Add Filter
+            </Button>
+          )}
+          {showFilterForm && (
+            <FilterConditionForm
+              properties={properties}
+              onAdd={handleAddFilter}
+              onCancel={() => setShowFilterForm(false)}
+            />
+          )}
 
           <Button
             type="submit"

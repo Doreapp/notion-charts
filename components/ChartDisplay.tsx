@@ -35,6 +35,7 @@ export default function ChartWidget({
     aggregation: config.aggregation,
     sort_order: config.sortOrder || "asc",
     accumulate: config.accumulate ? "true" : "false",
+    filters: encodeURIComponent(JSON.stringify(config.filters || [])),
   });
 
   if (config.yAxisFieldId) {

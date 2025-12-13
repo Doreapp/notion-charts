@@ -2,11 +2,14 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useRef } from "react";
-import { Box, Alert, IconButton } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ChartConfig from "./ChartConfig";
 import SecretInput from "./SecretInput";
-import type { ChartConfig as ChartConfigType } from "@/types/notion";
+import type {
+  ChartConfig as ChartConfigType,
+  FilterCondition,
+} from "@/types/notion";
 import ChartDisplay from "./ChartDisplay";
 import { hasSecret, clearSecret } from "@/utils/secret-storage";
 
@@ -32,6 +35,16 @@ export default function ChartWidget() {
       | "asc"
       | "desc";
     const accumulate = searchParams.get("accumulate") === "true";
+    const filtersParam = searchParams.get("filters");
+
+    let filters: FilterCondition[] | undefined;
+    if (filtersParam) {
+      try {
+        filters = JSON.parse(decodeURIComponent(filtersParam));
+      } catch (e) {
+        console.error("Failed to parse filters from URL", e);
+      }
+    }
 
     if (databaseId && xAxisFieldId) {
       return {
@@ -42,6 +55,7 @@ export default function ChartWidget() {
         aggregation,
         sortOrder,
         accumulate,
+        filters,
       };
     }
     return null;
@@ -74,6 +88,12 @@ export default function ChartWidget() {
     }
     if (newConfig.accumulate) {
       params.set("accumulate", "true");
+    }
+    if (newConfig.filters && newConfig.filters.length > 0) {
+      params.set(
+        "filters",
+        encodeURIComponent(JSON.stringify(newConfig.filters))
+      );
     }
     router.push(`/?${params.toString()}`);
   };
@@ -117,14 +137,6 @@ export default function ChartWidget() {
           initialConfig={config || undefined}
           onAuthError={handleAuthError}
         />
-      </Box>
-    );
-  }
-
-  if (!config) {
-    return (
-      <Box sx={{ p: 2, width: "100%" }}>
-        <Alert severity="info">Please configure the chart</Alert>
       </Box>
     );
   }
