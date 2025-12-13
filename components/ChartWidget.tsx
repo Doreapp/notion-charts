@@ -1,23 +1,27 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Box, Alert, IconButton } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ChartConfig from "./ChartConfig";
 import SecretInput from "./SecretInput";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
 import ChartDisplay from "./ChartDisplay";
-import { hasSecret } from "@/utils/secret-storage";
+import { hasSecret, clearSecret } from "@/utils/secret-storage";
 
 export default function ChartWidget() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const isInIframe = useMemo(() => window.self !== window.top, []);
+  const isInIframe = useMemo(
+    () => typeof window !== "undefined" && window.self !== window.top,
+    []
+  );
 
   const [hasStoredSecret, setHasStoredSecret] = useState(hasSecret());
+  const [authFailed, setAuthFailed] = useState(false);
 
   const [config, setConfig] = useState<ChartConfigType | null>(() => {
     const databaseId = searchParams.get("database_id");
@@ -36,6 +40,12 @@ export default function ChartWidget() {
 
   const handleSecretStored = () => {
     setHasStoredSecret(true);
+  };
+
+  const handleAuthError = () => {
+    clearSecret();
+    setHasStoredSecret(false);
+    setAuthFailed(true);
   };
 
   const handleConfigChange = (newConfig: ChartConfigType) => {
@@ -64,7 +74,10 @@ export default function ChartWidget() {
           overflow: "auto",
         }}
       >
-        <SecretInput onSecretStored={handleSecretStored} />
+        <SecretInput
+          onSecretStored={handleSecretStored}
+          authFailed={authFailed}
+        />
       </Box>
     );
   }
@@ -84,6 +97,7 @@ export default function ChartWidget() {
         <ChartConfig
           onConfigChange={handleConfigChange}
           initialConfig={config || undefined}
+          onAuthError={handleAuthError}
         />
       </Box>
     );
@@ -130,7 +144,7 @@ export default function ChartWidget() {
         </IconButton>
       )}
 
-      <ChartDisplay config={config} />
+      <ChartDisplay config={config} onAuthError={handleAuthError} />
     </Box>
   );
 }

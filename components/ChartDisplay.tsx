@@ -1,10 +1,11 @@
 "use client";
 
 import { Box, CircularProgress, Alert } from "@mui/material";
+import { useEffect } from "react";
 import LineChart from "./charts/LineChart";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
 import useSWR from "swr";
-import { fetcher } from "@/utils/fetcher";
+import { fetcher, UnauthorizedError } from "@/utils/fetcher";
 
 interface ChartDataPoint {
   name: string;
@@ -19,7 +20,15 @@ interface ChartDataResponse {
   totalPages?: number;
 }
 
-export default function ChartWidget({ config }: { config: ChartConfigType }) {
+interface ChartDisplayProps {
+  config: ChartConfigType;
+  onAuthError?: () => void;
+}
+
+export default function ChartWidget({
+  config,
+  onAuthError,
+}: ChartDisplayProps) {
   const {
     data: chartData,
     isLoading,
@@ -28,6 +37,12 @@ export default function ChartWidget({ config }: { config: ChartConfigType }) {
     `/api/chart-data?database_id=${config.databaseId}&field_id=${config.fieldId}`,
     fetcher
   );
+
+  useEffect(() => {
+    if (error instanceof UnauthorizedError && onAuthError) {
+      onAuthError();
+    }
+  }, [error, onAuthError]);
 
   if (isLoading) {
     return (
@@ -45,17 +60,24 @@ export default function ChartWidget({ config }: { config: ChartConfigType }) {
   }
 
   if (error) {
-    <Box
-      sx={{
-        flex: 1,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        p: 2,
-      }}
-    >
-      <Alert severity="error">{error}</Alert>
-    </Box>;
+    if (error instanceof UnauthorizedError) {
+      return null;
+    }
+    return (
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2,
+        }}
+      >
+        <Alert severity="error">
+          {error instanceof Error ? error.message : String(error)}
+        </Alert>
+      </Box>
+    );
   }
 
   return (

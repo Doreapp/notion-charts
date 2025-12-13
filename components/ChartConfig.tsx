@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Box,
   FormControl,
@@ -14,21 +14,29 @@ import {
 } from "@mui/material";
 import type { ChartConfig, DatabaseWithProperties } from "@/types/notion";
 import useSWR from "swr";
-import { fetcher } from "@/utils/fetcher";
+import { fetcher, UnauthorizedError } from "@/utils/fetcher";
 
 interface ChartConfigProps {
   onConfigChange: (config: ChartConfig) => void;
   initialConfig?: ChartConfig;
+  onAuthError?: () => void;
 }
 
 export default function ChartConfig({
   onConfigChange,
   initialConfig,
+  onAuthError,
 }: ChartConfigProps) {
   const { data, isLoading, error } = useSWR<{
     databases: DatabaseWithProperties[];
   }>("/api/databases", fetcher);
   const databases = useMemo(() => data?.databases, [data]);
+
+  useEffect(() => {
+    if (error instanceof UnauthorizedError && onAuthError) {
+      onAuthError();
+    }
+  }, [error, onAuthError]);
 
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string>(
     initialConfig?.databaseId || ""
@@ -74,7 +82,7 @@ export default function ChartConfig({
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
+          {error instanceof Error ? error.message : String(error)}
         </Alert>
       )}
 

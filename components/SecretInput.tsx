@@ -17,9 +17,13 @@ import { storeSecret } from "@/utils/secret-storage";
 
 interface SecretInputProps {
   onSecretStored: () => void;
+  authFailed?: boolean;
 }
 
-export default function SecretInput({ onSecretStored }: SecretInputProps) {
+export default function SecretInput({
+  onSecretStored,
+  authFailed,
+}: SecretInputProps) {
   const [secret, setSecret] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +67,12 @@ export default function SecretInput({ onSecretStored }: SecretInputProps) {
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
+        </Alert>
+      )}
+
+      {!error && authFailed && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Invalid or missing API secret
         </Alert>
       )}
 
