@@ -88,7 +88,6 @@ export default function ChartWidget() {
         sx={{
           width: "100%",
           height: "100%",
-          minHeight: "400px",
           p: 2,
           boxSizing: "border-box",
           overflow: "auto",
@@ -108,7 +107,6 @@ export default function ChartWidget() {
         sx={{
           width: "100%",
           height: "100%",
-          minHeight: "400px",
           p: 2,
           boxSizing: "border-box",
           overflow: "auto",
@@ -137,7 +135,6 @@ export default function ChartWidget() {
       sx={{
         width: "100%",
         height: "100%",
-        minHeight: "100%",
         p: 1,
         boxSizing: "border-box",
         overflow: "hidden",

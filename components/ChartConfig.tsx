@@ -121,7 +121,7 @@ export default function ChartConfig({
       )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack direction="column" gap={2} mt={2}>
+        <Stack direction="column" gap={1} mt={2}>
           <Controller
             name="databaseId"
             control={control}
