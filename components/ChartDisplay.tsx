@@ -29,12 +29,24 @@ export default function ChartWidget({
   config,
   onAuthError,
 }: ChartDisplayProps) {
+  const queryParams = new URLSearchParams({
+    database_id: config.databaseId,
+    x_axis_field_id: config.xAxisFieldId,
+    aggregation: config.aggregation,
+    sort_order: config.sortOrder || "asc",
+    accumulate: config.accumulate ? "true" : "false",
+  });
+
+  if (config.yAxisFieldId) {
+    queryParams.set("y_axis_field_id", config.yAxisFieldId);
+  }
+
   const {
     data: chartData,
     isLoading,
     error,
   } = useSWR<ChartDataResponse>(
-    `/api/chart-data?database_id=${config.databaseId}&field_id=${config.fieldId}`,
+    `/api/chart-data?${queryParams.toString()}`,
     fetcher
   );
 

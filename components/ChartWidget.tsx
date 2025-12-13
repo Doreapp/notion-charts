@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import { Box, Alert, IconButton } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ChartConfig from "./ChartConfig";
@@ -15,23 +15,33 @@ export default function ChartWidget() {
   const router = useRouter();
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const isInIframe = useMemo(
-    () => typeof window !== "undefined" && window.self !== window.top,
-    []
-  );
 
   const [hasStoredSecret, setHasStoredSecret] = useState(hasSecret());
   const [authFailed, setAuthFailed] = useState(false);
 
   const [config, setConfig] = useState<ChartConfigType | null>(() => {
     const databaseId = searchParams.get("database_id");
-    const fieldId = searchParams.get("field_id");
-    if (databaseId && fieldId) {
+    const xAxisFieldId =
+      searchParams.get("x_axis_field_id") || searchParams.get("field_id");
+    const yAxisFieldId = searchParams.get("y_axis_field_id") || undefined;
+    const aggregation = (searchParams.get("aggregation") || "count") as
+      | "count"
+      | "sum"
+      | "avg";
+    const sortOrder = (searchParams.get("sort_order") || "asc") as
+      | "asc"
+      | "desc";
+    const accumulate = searchParams.get("accumulate") === "true";
+
+    if (databaseId && xAxisFieldId) {
       return {
         databaseId,
-        fieldId,
+        xAxisFieldId,
+        yAxisFieldId,
         chartType: "line",
-        aggregation: "count",
+        aggregation,
+        sortOrder,
+        accumulate,
       };
     }
     return null;
@@ -54,7 +64,17 @@ export default function ChartWidget() {
 
     const params = new URLSearchParams();
     params.set("database_id", newConfig.databaseId);
-    params.set("field_id", newConfig.fieldId);
+    params.set("x_axis_field_id", newConfig.xAxisFieldId);
+    if (newConfig.yAxisFieldId) {
+      params.set("y_axis_field_id", newConfig.yAxisFieldId);
+    }
+    params.set("aggregation", newConfig.aggregation);
+    if (newConfig.sortOrder) {
+      params.set("sort_order", newConfig.sortOrder);
+    }
+    if (newConfig.accumulate) {
+      params.set("accumulate", "true");
+    }
     router.push(`/?${params.toString()}`);
   };
 
@@ -117,8 +137,8 @@ export default function ChartWidget() {
       sx={{
         width: "100%",
         height: "100%",
-        minHeight: isInIframe ? "100%" : "400px",
-        p: isInIframe ? 1 : 2,
+        minHeight: "100%",
+        p: 1,
         boxSizing: "border-box",
         overflow: "hidden",
         display: "flex",
@@ -126,23 +146,21 @@ export default function ChartWidget() {
         position: "relative",
       }}
     >
-      {isInIframe && (
-        <IconButton
-          onClick={handleEditConfig}
-          sx={{
-            position: "absolute",
-            top: 4,
-            left: 4,
-            zIndex: 10,
-            "&:hover": {
-              backgroundColor: "action.hover",
-            },
-          }}
-          size="small"
-        >
-          <SettingsIcon fontSize="small" />
-        </IconButton>
-      )}
+      <IconButton
+        onClick={handleEditConfig}
+        sx={{
+          position: "absolute",
+          top: 4,
+          left: 4,
+          zIndex: 10,
+          "&:hover": {
+            backgroundColor: "action.hover",
+          },
+        }}
+        size="small"
+      >
+        <SettingsIcon fontSize="small" />
+      </IconButton>
 
       <ChartDisplay config={config} onAuthError={handleAuthError} />
     </Box>

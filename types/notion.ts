@@ -16,7 +16,10 @@ export type DatabaseWithProperties = Database & {
 
 export interface ChartConfig {
   databaseId: string;
-  fieldId: string;
+  xAxisFieldId: string;
+  yAxisFieldId?: string;
   chartType: "line";
-  aggregation: "count";
+  aggregation: "count" | "sum" | "avg";
+  sortOrder?: "asc" | "desc";
+  accumulate?: boolean;
 }
