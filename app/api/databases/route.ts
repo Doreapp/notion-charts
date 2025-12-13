@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getDatabases } from "@/lib/notion/api/databases";
 import { parseDatabase } from "@/lib/parsers/database";
+import { withAuth } from "@/lib/auth/validate-secret";
 
-export async function GET() {
+async function getDatabasesHandler() {
   try {
     const databases = await getDatabases();
     const parsedDatabases = databases.map(parseDatabase);
@@ -19,3 +20,5 @@ export async function GET() {
     );
   }
 }
+
+export const GET = withAuth(getDatabasesHandler);

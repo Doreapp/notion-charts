@@ -1,10 +1,11 @@
 "use client";
 
-import { Box, CircularProgress, Alert } from "@mui/material";
+import { CircularProgress, Alert, Stack } from "@mui/material";
+import { useEffect } from "react";
 import LineChart from "./charts/LineChart";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
 import useSWR from "swr";
-import { fetcher } from "@/utils/fetcher";
+import { fetcher, UnauthorizedError } from "@/utils/fetcher";
 
 interface ChartDataPoint {
   name: string;
@@ -19,7 +20,15 @@ interface ChartDataResponse {
   totalPages?: number;
 }
 
-export default function ChartWidget({ config }: { config: ChartConfigType }) {
+interface ChartDisplayProps {
+  config: ChartConfigType;
+  onAuthError?: () => void;
+}
+
+export default function ChartWidget({
+  config,
+  onAuthError,
+}: ChartDisplayProps) {
   const {
     data: chartData,
     isLoading,
@@ -29,57 +38,55 @@ export default function ChartWidget({ config }: { config: ChartConfigType }) {
     fetcher
   );
 
+  useEffect(() => {
+    if (error instanceof UnauthorizedError && onAuthError) {
+      onAuthError();
+    }
+  }, [error, onAuthError]);
+
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
+      <Stack
+        direction="row"
+        justifyContent="center"
+        alignItems="center"
+        flex={1}
       >
         <CircularProgress />
-      </Box>
+      </Stack>
     );
   }
 
   if (error) {
-    <Box
-      sx={{
-        flex: 1,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        p: 2,
-      }}
-    >
-      <Alert severity="error">{error}</Alert>
-    </Box>;
+    if (error instanceof UnauthorizedError) {
+      return null;
+    }
+    return (
+      <Stack
+        direction="row"
+        justifyContent="center"
+        alignItems="center"
+        flex={1}
+        p={2}
+      >
+        <Alert severity="error">
+          {error instanceof Error ? error.message : String(error)}
+        </Alert>
+      </Stack>
+    );
   }
 
   return (
-    <Box
-      sx={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        minHeight: 0,
-        width: "100%",
-        height: "100%",
-      }}
-    >
+    <Stack direction="column" flex={1} minHeight={0} width="100%" height="100%">
       {!chartData || chartData.data.length === 0 ? (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+        <Stack
+          direction="row"
+          justifyContent="center"
+          alignItems="center"
+          flex={1}
         >
           <Alert severity="info">No data available</Alert>
-        </Box>
+        </Stack>
       ) : (
         <LineChart
           data={chartData.data}
@@ -88,6 +95,6 @@ export default function ChartWidget({ config }: { config: ChartConfigType }) {
           fieldType={chartData.fieldType}
         />
       )}
-    </Box>
+    </Stack>
   );
 }

@@ -1,28 +1,14 @@
 "use client";
 
-import { Suspense } from "react";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import { Box, CircularProgress } from "@mui/material";
-import ChartWidget from "@/components/ChartWidget";
 import "./globals.css";
 import { useNotionTheme } from "@/hooks/use-notion-theme";
+import dynamic from "next/dynamic";
 
-function LoadingFallback() {
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "400px",
-        width: "100%",
-      }}
-    >
-      <CircularProgress />
-    </Box>
-  );
-}
+const ChartWidget = dynamic(() => import("@/components/ChartWidget"), {
+  ssr: false,
+});
 
 export default function EmbedPage() {
   const theme = useNotionTheme();
@@ -30,9 +16,7 @@ export default function EmbedPage() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Suspense fallback={<LoadingFallback />}>
-        <ChartWidget />
-      </Suspense>
+      <ChartWidget />
     </ThemeProvider>
   );
 }

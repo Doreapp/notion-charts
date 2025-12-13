@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { notionClient } from "@/lib/notion/client";
 import { processNotionDataForChart } from "@/lib/notion/chart-processor";
 import { getAllDatabasePages } from "@/lib/notion/api/database-pages";
+import { withAuth } from "@/lib/auth/validate-secret";
 
 /**
  * API route to fetch chart data from a Notion database.
  */
-export async function GET(request: NextRequest) {
+async function getChartDataHandler(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const databaseId = searchParams.get("database_id");
@@ -55,3 +56,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
+export const GET = withAuth(getChartDataHandler);
