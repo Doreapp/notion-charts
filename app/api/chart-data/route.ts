@@ -2,20 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { notionClient } from "@/lib/notion/client";
 import { processNotionDataForChart } from "@/lib/notion/chart-processor";
 import { getAllDatabasePages } from "@/lib/notion/api/database-pages";
-import {
-  validateApiSecret,
-  createUnauthorizedResponse,
-} from "@/lib/auth/validate-secret";
+import { withAuth } from "@/lib/auth/validate-secret";
 
 /**
  * API route to fetch chart data from a Notion database.
  */
-export async function GET(request: NextRequest) {
+async function getChartDataHandler(request: NextRequest) {
   try {
-    if (!validateApiSecret(request)) {
-      return createUnauthorizedResponse();
-    }
-
     const searchParams = request.nextUrl.searchParams;
     const databaseId = searchParams.get("database_id");
     const fieldId = searchParams.get("field_id");
@@ -63,3 +56,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
+export const GET = withAuth(getChartDataHandler);

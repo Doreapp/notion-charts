@@ -29,3 +29,17 @@ export function createUnauthorizedResponse(message?: string): NextResponse {
     { status: 401 }
   );
 }
+
+type RouteHandler = (
+  request: NextRequest
+) => Promise<NextResponse> | NextResponse;
+
+export function withAuth(handler: RouteHandler): RouteHandler {
+  return async (request: NextRequest) => {
+    if (!validateApiSecret(request)) {
+      return createUnauthorizedResponse();
+    }
+
+    return handler(request);
+  };
+}
