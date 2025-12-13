@@ -8,7 +8,11 @@ import {
   Typography,
   Paper,
   Alert,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { storeSecret } from "@/utils/secret-storage";
 
 interface SecretInputProps {
@@ -19,6 +23,7 @@ export default function SecretInput({ onSecretStored }: SecretInputProps) {
   const [secret, setSecret] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +72,7 @@ export default function SecretInput({ onSecretStored }: SecretInputProps) {
         sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
       >
         <TextField
-          type="password"
+          type={showSecret ? "text" : "password"}
           label="API Secret"
           value={secret}
           onChange={(e) => setSecret(e.target.value)}
@@ -75,6 +80,22 @@ export default function SecretInput({ onSecretStored }: SecretInputProps) {
           size="small"
           disabled={isSubmitting}
           autoFocus
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowSecret(!showSecret)}
+                    edge="end"
+                    disabled={isSubmitting}
+                    size="small"
+                  >
+                    {showSecret ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
         />
 
         <Button
