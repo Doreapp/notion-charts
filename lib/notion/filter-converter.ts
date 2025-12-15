@@ -210,7 +210,7 @@ function convertCheckboxFilter(
   };
 }
 
-export function convertFilterConditionToNotionFilter(
+function convertFilterConditionToNotionFilter(
   condition: FilterCondition
 ): NotionFilterProperty {
   switch (condition.propertyType) {
