@@ -24,7 +24,7 @@ import type {
 import useSWR from "swr";
 import { fetcher, UnauthorizedError } from "@/utils/fetcher";
 import FilterChipList from "./FilterChipList";
-import FilterConditionForm from "./FilterConditionForm";
+import FilterConditionForm from "./config-form/FilterConditionForm";
 import DatabaseSelect from "./config-form/DatabaseSelect";
 import PropertySelect from "./config-form/PropertySelect";
 
