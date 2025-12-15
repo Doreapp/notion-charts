@@ -15,6 +15,7 @@ import {
   Checkbox,
   FormControlLabel,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import type {
   ChartConfig,
@@ -99,7 +100,7 @@ export default function ChartConfig({
       });
       setFilters(initialConfig.filters || []);
     }
-  }, [initialConfig, reset]);
+  }, [initialConfig]);
 
   const selectedDatabaseId = watch("databaseId");
   const aggregation = watch("aggregation");
@@ -115,17 +116,24 @@ export default function ChartConfig({
   }, [properties]);
 
   useEffect(() => {
-    if (selectedDatabaseId) {
-      setValue("xAxisFieldId", "");
+    if (selectedDatabaseId && databases) {
+      if (
+        !initialConfig?.xAxisFieldId ||
+        !databases
+          ?.find((db) => db.id === selectedDatabaseId)
+          ?.properties?.find((prop) => prop.id === initialConfig.xAxisFieldId)
+      ) {
+        setValue("xAxisFieldId", "");
+      }
       setValue("yAxisFieldId", "");
     }
-  }, [selectedDatabaseId, setValue]);
+  }, [selectedDatabaseId]);
 
   useEffect(() => {
     if (aggregation === "count") {
       setValue("yAxisFieldId", "");
     }
-  }, [aggregation, setValue]);
+  }, [aggregation]);
 
   const handleAddFilter = (condition: FilterCondition) => {
     setFilters([...filters, condition]);
@@ -150,6 +158,17 @@ export default function ChartConfig({
     };
     onConfigChange(config);
   };
+
+  if (!databases) {
+    return (
+      <Paper sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
+        <Typography variant="h6" gutterBottom>
+          Loading databases...
+        </Typography>
+        <CircularProgress />
+      </Paper>
+    );
+  }
 
   return (
     <Paper sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
