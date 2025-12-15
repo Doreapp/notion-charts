@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, FormProvider } from "react-hook-form";
 import {
   FormControl,
   InputLabel,
@@ -25,6 +25,8 @@ import useSWR from "swr";
 import { fetcher, UnauthorizedError } from "@/utils/fetcher";
 import FilterChipList from "./FilterChipList";
 import FilterConditionForm from "./FilterConditionForm";
+import DatabaseSelect from "./config-form/DatabaseSelect";
+import PropertySelect from "./config-form/PropertySelect";
 
 interface ChartConfigProps {
   onConfigChange: (config: ChartConfig) => void;
@@ -63,14 +65,7 @@ export default function ChartConfig({
     }
   }, [error, onAuthError]);
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { isValid },
-    reset,
-  } = useForm<FormValues>({
+  const methods = useForm<FormValues>({
     defaultValues: {
       databaseId: initialConfig?.databaseId || "",
       xAxisFieldId: initialConfig?.xAxisFieldId || "",
@@ -82,6 +77,14 @@ export default function ChartConfig({
     },
     mode: "onChange",
   });
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { isValid },
+    reset,
+  } = methods;
 
   useEffect(() => {
     if (initialConfig) {
@@ -161,208 +164,143 @@ export default function ChartConfig({
       )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack direction="column" gap={1} mt={2}>
-          <Controller
-            name="databaseId"
-            control={control}
-            rules={{ required: "Database is required" }}
-            render={({ field }) => (
-              <FormControl fullWidth disabled={isLoading}>
-                <InputLabel size="small">Database</InputLabel>
-                <Select
-                  {...field}
-                  value={isLoading ? "loading" : field.value}
-                  label="Database"
-                  size="small"
-                >
-                  {isLoading && (
-                    <MenuItem disabled value="loading">
-                      Loading databases...
-                    </MenuItem>
-                  )}
-                  {databases?.map((db) => (
-                    <MenuItem key={db.id} value={db.id}>
-                      {db.title}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-          />
+        <FormProvider {...methods}>
+          <Stack direction="column" gap={1} mt={2}>
+            <DatabaseSelect
+              name="databaseId"
+              isLoading={isLoading}
+              databases={databases ?? []}
+            />
 
-          <Controller
-            name="xAxisFieldId"
-            control={control}
-            rules={{ required: "X axis field is required" }}
-            render={({ field }) => (
-              <FormControl
-                fullWidth
-                disabled={!selectedDatabaseId || isLoading}
-              >
-                <InputLabel size="small">X Axis Field</InputLabel>
-                <Select
-                  {...field}
-                  label="X Axis Field"
-                  disabled={!selectedDatabaseId || isLoading}
-                  size="small"
-                >
-                  {properties.length === 0 ? (
-                    <MenuItem disabled>
-                      {selectedDatabaseId
-                        ? "No properties available"
-                        : "Select a database first"}
-                    </MenuItem>
-                  ) : (
-                    properties.map((prop) => (
-                      <MenuItem key={prop.id} value={prop.id}>
-                        {prop.name} ({prop.type})
-                      </MenuItem>
-                    ))
-                  )}
-                </Select>
-              </FormControl>
-            )}
-          />
+            <PropertySelect
+              name="xAxisFieldId"
+              isLoading={isLoading}
+              disabled={!selectedDatabaseId}
+              properties={properties}
+              required
+              label="X Axis Field"
+              emptyWarningMessage={
+                selectedDatabaseId
+                  ? "No properties available"
+                  : "Select a database first"
+              }
+            />
 
-          <Controller
-            name="aggregation"
-            control={control}
-            render={({ field }) => (
-              <FormControl
-                fullWidth
-                disabled={!selectedDatabaseId || isLoading}
-              >
-                <InputLabel size="small">Aggregation</InputLabel>
-                <Select
-                  {...field}
-                  label="Aggregation"
-                  disabled={!selectedDatabaseId || isLoading}
-                  size="small"
-                >
-                  <MenuItem value="count">Count</MenuItem>
-                  <MenuItem value="sum">Sum</MenuItem>
-                  <MenuItem value="avg">Average</MenuItem>
-                </Select>
-              </FormControl>
-            )}
-          />
-
-          {(aggregation === "sum" || aggregation === "avg") && (
             <Controller
-              name="yAxisFieldId"
+              name="aggregation"
               control={control}
-              rules={{
-                required:
-                  aggregation === "sum" || aggregation === "avg"
-                    ? "Y axis field is required for sum/avg aggregation"
-                    : false,
-              }}
               render={({ field }) => (
                 <FormControl
                   fullWidth
                   disabled={!selectedDatabaseId || isLoading}
                 >
-                  <InputLabel size="small">Y Axis Field (Numeric)</InputLabel>
+                  <InputLabel size="small">Aggregation</InputLabel>
                   <Select
                     {...field}
-                    label="Y Axis Field (Numeric)"
+                    label="Aggregation"
                     disabled={!selectedDatabaseId || isLoading}
                     size="small"
                   >
-                    {numericProperties.length === 0 ? (
-                      <MenuItem disabled>
-                        {selectedDatabaseId
-                          ? "No numeric properties available"
-                          : "Select a database first"}
-                      </MenuItem>
-                    ) : (
-                      numericProperties.map((prop) => (
-                        <MenuItem key={prop.id} value={prop.id}>
-                          {prop.name} ({prop.type})
-                        </MenuItem>
-                      ))
-                    )}
+                    <MenuItem value="count">Count</MenuItem>
+                    <MenuItem value="sum">Sum</MenuItem>
+                    <MenuItem value="avg">Average</MenuItem>
                   </Select>
                 </FormControl>
               )}
             />
-          )}
 
-          <Controller
-            name="sortOrder"
-            control={control}
-            render={({ field }) => (
-              <FormControl
-                fullWidth
-                disabled={!selectedDatabaseId || isLoading}
-              >
-                <InputLabel size="small">Sort Order</InputLabel>
-                <Select
-                  {...field}
-                  label="Sort Order"
-                  disabled={!selectedDatabaseId || isLoading}
-                  size="small"
-                >
-                  <MenuItem value="asc">Ascending</MenuItem>
-                  <MenuItem value="desc">Descending</MenuItem>
-                </Select>
-              </FormControl>
-            )}
-          />
-
-          <Controller
-            name="accumulate"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    {...field}
-                    checked={field.value}
-                    disabled={!selectedDatabaseId || isLoading}
-                  />
+            {(aggregation === "sum" || aggregation === "avg") && (
+              <PropertySelect
+                name="yAxisFieldId"
+                isLoading={isLoading}
+                disabled={!selectedDatabaseId}
+                required={aggregation === "sum" || aggregation === "avg"}
+                properties={numericProperties}
+                label="Y Axis Field (Numeric)"
+                emptyWarningMessage={
+                  selectedDatabaseId
+                    ? "No numeric properties available"
+                    : "Select a database first"
                 }
-                label="Accumulate values (cumulative sum)"
               />
             )}
-          />
 
-          <Divider />
-
-          <Typography variant="subtitle2">Filters</Typography>
-          <FilterChipList
-            filters={filters}
-            properties={properties}
-            onDelete={handleDeleteFilter}
-          />
-          {!showFilterForm && (
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => setShowFilterForm(true)}
-              disabled={!selectedDatabaseId || isLoading}
-            >
-              Add Filter
-            </Button>
-          )}
-          {showFilterForm && (
-            <FilterConditionForm
-              properties={properties}
-              onAdd={handleAddFilter}
-              onCancel={() => setShowFilterForm(false)}
+            <Controller
+              name="sortOrder"
+              control={control}
+              render={({ field }) => (
+                <FormControl
+                  fullWidth
+                  disabled={!selectedDatabaseId || isLoading}
+                >
+                  <InputLabel size="small">Sort Order</InputLabel>
+                  <Select
+                    {...field}
+                    label="Sort Order"
+                    disabled={!selectedDatabaseId || isLoading}
+                    size="small"
+                  >
+                    <MenuItem value="asc">Ascending</MenuItem>
+                    <MenuItem value="desc">Descending</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
             />
-          )}
 
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={!isValid}
-            size="small"
-            sx={{ alignSelf: "flex-end" }}
-          >
-            Apply Configuration
-          </Button>
-        </Stack>
+            <Controller
+              name="accumulate"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      {...field}
+                      checked={field.value}
+                      disabled={!selectedDatabaseId || isLoading}
+                    />
+                  }
+                  label="Accumulate values (cumulative sum)"
+                />
+              )}
+            />
+
+            <Divider />
+
+            <Typography variant="subtitle2">Filters</Typography>
+            <FilterChipList
+              filters={filters}
+              properties={properties}
+              onDelete={handleDeleteFilter}
+            />
+            {!showFilterForm && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setShowFilterForm(true)}
+                disabled={!selectedDatabaseId || isLoading}
+              >
+                Add Filter
+              </Button>
+            )}
+            {showFilterForm && (
+              <FilterConditionForm
+                properties={properties}
+                onAdd={handleAddFilter}
+                onCancel={() => setShowFilterForm(false)}
+              />
+            )}
+
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={!isValid}
+              size="small"
+              sx={{ alignSelf: "flex-end" }}
+            >
+              Apply Configuration
+            </Button>
+          </Stack>
+        </FormProvider>
       </form>
     </Paper>
   );
