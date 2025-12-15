@@ -3,6 +3,7 @@ import { notionClient } from "@/lib/notion/client";
 import { processNotionDataForChart } from "@/lib/notion/chart-processor";
 import { getAllDatabasePages } from "@/lib/notion/api/database-pages";
 import { withAuth } from "@/lib/auth/validate-secret";
+import type { FilterCondition } from "@/types/notion";
 
 /**
  * API route to fetch chart data from a Notion database.
@@ -11,11 +12,58 @@ async function getChartDataHandler(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const databaseId = searchParams.get("database_id");
-    const fieldId = searchParams.get("field_id");
+    const xAxisFieldId = searchParams.get("x_axis_field_id");
+    const yAxisFieldId = searchParams.get("y_axis_field_id");
+    const aggregation = searchParams.get("aggregation") || "count";
+    const sortOrder = (searchParams.get("sort_order") || "asc") as
+      | "asc"
+      | "desc";
+    const accumulate = searchParams.get("accumulate") === "true";
+    const filtersParam = searchParams.get("filters");
 
-    if (!databaseId || !fieldId) {
+    let filters: FilterCondition[] | undefined;
+    if (filtersParam) {
+      try {
+        filters = JSON.parse(decodeURIComponent(filtersParam));
+        if (!Array.isArray(filters)) {
+          return NextResponse.json(
+            { error: "Invalid filters format. Must be an array." },
+            { status: 400 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Failed to parse filters parameter." },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (!databaseId || !xAxisFieldId) {
       return NextResponse.json(
-        { error: "Missing required parameters: database_id and field_id" },
+        {
+          error: "Missing required parameters: database_id and x_axis_field_id",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      aggregation !== "count" &&
+      aggregation !== "sum" &&
+      aggregation !== "avg"
+    ) {
+      return NextResponse.json(
+        { error: "Invalid aggregation type. Must be 'count', 'sum', or 'avg'" },
+        { status: 400 }
+      );
+    }
+
+    if ((aggregation === "sum" || aggregation === "avg") && !yAxisFieldId) {
+      return NextResponse.json(
+        {
+          error: `Y axis field is required for aggregation type: ${aggregation}`,
+        },
         { status: 400 }
       );
     }
@@ -24,29 +72,74 @@ async function getChartDataHandler(request: NextRequest) {
       data_source_id: databaseId,
     });
 
-    const fieldProperty = database.properties[fieldId];
-    if (!fieldProperty) {
+    const xAxisFieldProperty = database.properties[xAxisFieldId];
+    if (!xAxisFieldProperty) {
       return NextResponse.json(
-        { error: `Field ${fieldId} not found in database` },
+        { error: `X axis field ${xAxisFieldId} not found in database` },
         { status: 404 }
       );
     }
 
-    const allPages = await getAllDatabasePages(databaseId);
+    if (yAxisFieldId) {
+      const yAxisFieldProperty = database.properties[yAxisFieldId];
+      if (!yAxisFieldProperty) {
+        return NextResponse.json(
+          { error: `Y axis field ${yAxisFieldId} not found in database` },
+          { status: 404 }
+        );
+      }
 
-    const fieldType = fieldProperty.type;
+      if (
+        (aggregation === "sum" || aggregation === "avg") &&
+        yAxisFieldProperty.type !== "number"
+      ) {
+        return NextResponse.json(
+          {
+            error: `Y axis field must be of type 'number' for aggregation type: ${aggregation}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (filters && filters.length > 0) {
+      for (const filter of filters) {
+        const property = database.properties[filter.propertyId];
+        if (!property) {
+          return NextResponse.json(
+            {
+              error: `Filter property ${filter.propertyId} not found in database`,
+            },
+            { status: 400 }
+          );
+        }
+        if (property.type !== filter.propertyType) {
+          return NextResponse.json(
+            { error: `Filter property type mismatch for ${filter.propertyId}` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    const allPages = await getAllDatabasePages(databaseId, -1, filters);
+
+    const xAxisFieldType = xAxisFieldProperty.type;
     const chartData = processNotionDataForChart(
       allPages,
-      fieldId,
-      fieldType,
-      "count"
+      xAxisFieldId,
+      xAxisFieldType,
+      aggregation as "count" | "sum" | "avg",
+      yAxisFieldId || undefined,
+      sortOrder,
+      accumulate
     );
 
     return NextResponse.json({
       data: chartData.data,
-      xAxisLabel: fieldProperty.name || "Value",
+      xAxisLabel: xAxisFieldProperty.name || "Value",
       yAxisLabel: chartData.yAxisLabel,
-      fieldType,
+      fieldType: xAxisFieldType,
       totalPages: allPages.length,
     });
   } catch (error) {

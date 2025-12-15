@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { useForm, Controller, FormProvider, useWatch } from "react-hook-form";
 import {
   FormControl,
   InputLabel,
@@ -11,10 +12,22 @@ import {
   Typography,
   Paper,
   Stack,
+  Checkbox,
+  FormControlLabel,
+  Divider,
+  CircularProgress,
 } from "@mui/material";
-import type { ChartConfig, DatabaseWithProperties } from "@/types/notion";
+import type {
+  ChartConfig,
+  DatabaseWithProperties,
+  FilterCondition,
+} from "@/types/notion";
 import useSWR from "swr";
 import { fetcher, UnauthorizedError } from "@/utils/fetcher";
+import FilterChipList from "./FilterChipList";
+import FilterConditionForm from "./config-form/FilterConditionForm";
+import DatabaseSelect from "./config-form/DatabaseSelect";
+import PropertySelect from "./config-form/PropertySelect";
 
 interface ChartConfigProps {
   onConfigChange: (config: ChartConfig) => void;
@@ -22,11 +35,26 @@ interface ChartConfigProps {
   onAuthError?: () => void;
 }
 
+interface FormValues {
+  databaseId: string;
+  xAxisFieldId: string;
+  yAxisFieldId: string;
+  aggregation: "count" | "sum" | "avg";
+  sortOrder: "asc" | "desc";
+  accumulate: boolean;
+  filters: FilterCondition[];
+}
+
 export default function ChartConfig({
   onConfigChange,
   initialConfig,
   onAuthError,
 }: ChartConfigProps) {
+  const [filters, setFilters] = useState<FilterCondition[]>(
+    initialConfig?.filters || []
+  );
+  const [showFilterForm, setShowFilterForm] = useState(false);
+
   const { data, isLoading, error } = useSWR<{
     databases: DatabaseWithProperties[];
   }>("/api/databases", fetcher);
@@ -38,12 +66,47 @@ export default function ChartConfig({
     }
   }, [error, onAuthError]);
 
-  const [selectedDatabaseId, setSelectedDatabaseId] = useState<string>(
-    initialConfig?.databaseId || ""
-  );
-  const [selectedFieldId, setSelectedFieldId] = useState<string>(
-    initialConfig?.fieldId || ""
-  );
+  const methods = useForm<FormValues>({
+    defaultValues: {
+      databaseId: initialConfig?.databaseId || "",
+      xAxisFieldId: initialConfig?.xAxisFieldId || "",
+      yAxisFieldId: initialConfig?.yAxisFieldId || "",
+      aggregation: initialConfig?.aggregation || "count",
+      sortOrder: initialConfig?.sortOrder || "asc",
+      accumulate: initialConfig?.accumulate || false,
+      filters: initialConfig?.filters || [],
+    },
+    mode: "onChange",
+  });
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { isValid },
+    reset,
+  } = methods;
+
+  useEffect(() => {
+    if (initialConfig) {
+      reset({
+        databaseId: initialConfig.databaseId,
+        xAxisFieldId: initialConfig.xAxisFieldId,
+        yAxisFieldId: initialConfig.yAxisFieldId || "",
+        aggregation: initialConfig.aggregation,
+        sortOrder: initialConfig.sortOrder || "asc",
+        accumulate: initialConfig.accumulate || false,
+        filters: initialConfig.filters || [],
+      });
+      if (initialConfig.filters !== filters) {
+        setFilters(initialConfig.filters || []);
+      }
+    }
+    // Only need to run when initialConfig changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialConfig]);
+
+  const selectedDatabaseId = useWatch({ control, name: "databaseId" });
+  const aggregation = useWatch({ control, name: "aggregation" });
 
   const properties = useMemo(() => {
     return (
@@ -51,28 +114,67 @@ export default function ChartConfig({
     );
   }, [databases, selectedDatabaseId]);
 
-  const handleDatabaseChange = (databaseId: string) => {
-    setSelectedDatabaseId(databaseId);
-    setSelectedFieldId("");
-  };
-
-  const handleFieldChange = (fieldId: string) => {
-    setSelectedFieldId(fieldId);
-  };
-
-  const handleApply = () => {
-    if (selectedDatabaseId && selectedFieldId) {
-      const config: ChartConfig = {
-        databaseId: selectedDatabaseId,
-        fieldId: selectedFieldId,
-        chartType: "line",
-        aggregation: "count",
-      };
-      onConfigChange(config);
+  const numericProperties = useMemo(() => {
+    return properties.filter((prop) => prop.type === "number");
+  }, [properties]);
+  useEffect(() => {
+    if (selectedDatabaseId && databases) {
+      if (
+        !initialConfig?.xAxisFieldId ||
+        !databases
+          ?.find((db) => db.id === selectedDatabaseId)
+          ?.properties?.find((prop) => prop.id === initialConfig.xAxisFieldId)
+      ) {
+        setValue("xAxisFieldId", "");
+      }
+      setValue("yAxisFieldId", "");
     }
+    // Only need to run when selectedDatabaseId changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDatabaseId]);
+
+  useEffect(() => {
+    if (aggregation === "count") {
+      setValue("yAxisFieldId", "");
+    }
+    // Only need to run when aggregation changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aggregation]);
+
+  const handleAddFilter = (condition: FilterCondition) => {
+    setFilters([...filters, condition]);
+    setShowFilterForm(false);
   };
 
-  const isConfigValid = selectedDatabaseId && selectedFieldId;
+  const handleDeleteFilter = (index: number) => {
+    setFilters(filters.filter((_, i) => i !== index));
+  };
+
+  const onSubmit = (data: FormValues) => {
+    const config: ChartConfig = {
+      databaseId: data.databaseId,
+      xAxisFieldId: data.xAxisFieldId,
+      yAxisFieldId:
+        data.aggregation === "count" ? undefined : data.yAxisFieldId,
+      chartType: "line",
+      aggregation: data.aggregation,
+      sortOrder: data.sortOrder,
+      accumulate: data.accumulate,
+      filters: filters.length > 0 ? filters : undefined,
+    };
+    onConfigChange(config);
+  };
+
+  if (!databases) {
+    return (
+      <Paper sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
+        <Typography variant="h6" gutterBottom>
+          Loading databases...
+        </Typography>
+        <CircularProgress />
+      </Paper>
+    );
+  }
 
   return (
     <Paper sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
@@ -86,63 +188,147 @@ export default function ChartConfig({
         </Alert>
       )}
 
-      <Stack direction="column" gap={2} mt={2}>
-        <FormControl fullWidth disabled={isLoading}>
-          <InputLabel size="small">Database</InputLabel>
-          <Select
-            value={isLoading ? "loading" : selectedDatabaseId}
-            label="Database"
-            onChange={(e) => handleDatabaseChange(e.target.value)}
-            size="small"
-          >
-            {isLoading && (
-              <MenuItem disabled value="loading">
-                Loading databases...
-              </MenuItem>
-            )}
-            {databases?.map((db) => (
-              <MenuItem key={db.id} value={db.id}>
-                {db.title}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FormProvider {...methods}>
+          <Stack direction="column" gap={1} mt={2}>
+            <DatabaseSelect
+              name="databaseId"
+              isLoading={isLoading}
+              databases={databases ?? []}
+            />
 
-        <FormControl fullWidth disabled={!selectedDatabaseId || isLoading}>
-          <InputLabel size="small">Field</InputLabel>
-          <Select
-            value={selectedFieldId}
-            label="Field"
-            onChange={(e) => handleFieldChange(e.target.value)}
-            disabled={!selectedDatabaseId || isLoading}
-            size="small"
-          >
-            {properties.length === 0 ? (
-              <MenuItem disabled>
-                {selectedDatabaseId
+            <PropertySelect
+              name="xAxisFieldId"
+              isLoading={isLoading}
+              disabled={!selectedDatabaseId}
+              properties={properties}
+              required
+              label="X Axis Field"
+              emptyWarningMessage={
+                selectedDatabaseId
                   ? "No properties available"
-                  : "Select a database first"}
-              </MenuItem>
-            ) : (
-              properties.map((prop) => (
-                <MenuItem key={prop.id} value={prop.id}>
-                  {prop.name} ({prop.type})
-                </MenuItem>
-              ))
-            )}
-          </Select>
-        </FormControl>
+                  : "Select a database first"
+              }
+            />
 
-        <Button
-          variant="contained"
-          onClick={handleApply}
-          disabled={!isConfigValid}
-          size="small"
-          sx={{ alignSelf: "flex-end" }}
-        >
-          Apply Configuration
-        </Button>
-      </Stack>
+            <Controller
+              name="aggregation"
+              control={control}
+              render={({ field }) => (
+                <FormControl
+                  fullWidth
+                  disabled={!selectedDatabaseId || isLoading}
+                >
+                  <InputLabel size="small">Aggregation</InputLabel>
+                  <Select
+                    {...field}
+                    label="Aggregation"
+                    disabled={!selectedDatabaseId || isLoading}
+                    size="small"
+                  >
+                    <MenuItem value="count">Count</MenuItem>
+                    <MenuItem value="sum">Sum</MenuItem>
+                    <MenuItem value="avg">Average</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
+            />
+
+            {(aggregation === "sum" || aggregation === "avg") && (
+              <PropertySelect
+                name="yAxisFieldId"
+                isLoading={isLoading}
+                disabled={!selectedDatabaseId}
+                required={aggregation === "sum" || aggregation === "avg"}
+                properties={numericProperties}
+                label="Y Axis Field (Numeric)"
+                emptyWarningMessage={
+                  selectedDatabaseId
+                    ? "No numeric properties available"
+                    : "Select a database first"
+                }
+              />
+            )}
+
+            <Controller
+              name="sortOrder"
+              control={control}
+              render={({ field }) => (
+                <FormControl
+                  fullWidth
+                  disabled={!selectedDatabaseId || isLoading}
+                >
+                  <InputLabel size="small">Sort Order</InputLabel>
+                  <Select
+                    {...field}
+                    label="Sort Order"
+                    disabled={!selectedDatabaseId || isLoading}
+                    size="small"
+                  >
+                    <MenuItem value="asc">Ascending</MenuItem>
+                    <MenuItem value="desc">Descending</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
+            />
+
+            <Controller
+              name="accumulate"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      {...field}
+                      checked={field.value}
+                      disabled={!selectedDatabaseId || isLoading}
+                    />
+                  }
+                  label="Accumulate values (cumulative sum)"
+                />
+              )}
+            />
+
+            <Divider />
+
+            <Stack direction="column">
+              <Typography variant="subtitle2">Filters</Typography>
+              <FilterChipList
+                filters={filters}
+                properties={properties}
+                onDelete={handleDeleteFilter}
+              />
+              {!showFilterForm && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setShowFilterForm(true)}
+                  disabled={!selectedDatabaseId || isLoading}
+                >
+                  Add Filter
+                </Button>
+              )}
+              {showFilterForm && (
+                <FilterConditionForm
+                  properties={properties}
+                  onAdd={handleAddFilter}
+                  onCancel={() => setShowFilterForm(false)}
+                />
+              )}
+            </Stack>
+
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={!isValid}
+              size="small"
+              sx={{ alignSelf: "flex-end" }}
+            >
+              Apply Configuration
+            </Button>
+          </Stack>
+        </FormProvider>
+      </form>
     </Paper>
   );
 }
