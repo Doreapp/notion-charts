@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useEffect, useState } from "react";
-import { useForm, Controller, FormProvider } from "react-hook-form";
+import { useForm, Controller, FormProvider, useWatch } from "react-hook-form";
 import {
   FormControl,
   InputLabel,
@@ -81,7 +81,6 @@ export default function ChartConfig({
   const {
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { isValid },
     reset,
@@ -98,12 +97,16 @@ export default function ChartConfig({
         accumulate: initialConfig.accumulate || false,
         filters: initialConfig.filters || [],
       });
-      setFilters(initialConfig.filters || []);
+      if (initialConfig.filters !== filters) {
+        setFilters(initialConfig.filters || []);
+      }
     }
+    // Only need to run when initialConfig changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialConfig]);
 
-  const selectedDatabaseId = watch("databaseId");
-  const aggregation = watch("aggregation");
+  const selectedDatabaseId = useWatch({ control, name: "databaseId" });
+  const aggregation = useWatch({ control, name: "aggregation" });
 
   const properties = useMemo(() => {
     return (
@@ -114,7 +117,6 @@ export default function ChartConfig({
   const numericProperties = useMemo(() => {
     return properties.filter((prop) => prop.type === "number");
   }, [properties]);
-
   useEffect(() => {
     if (selectedDatabaseId && databases) {
       if (
@@ -127,12 +129,16 @@ export default function ChartConfig({
       }
       setValue("yAxisFieldId", "");
     }
+    // Only need to run when selectedDatabaseId changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDatabaseId]);
 
   useEffect(() => {
     if (aggregation === "count") {
       setValue("yAxisFieldId", "");
     }
+    // Only need to run when aggregation changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aggregation]);
 
   const handleAddFilter = (condition: FilterCondition) => {

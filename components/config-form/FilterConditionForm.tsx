@@ -21,7 +21,6 @@ import type {
   StatusFilterOperator,
   DateFilterOperator,
   CheckboxFilterOperator,
-  CheckboxFilterCondition,
 } from "@/types/notion";
 
 interface FilterConditionFormProps {
