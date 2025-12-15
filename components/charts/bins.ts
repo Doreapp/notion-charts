@@ -3,7 +3,7 @@ import { ChartDataPoint } from "@/lib/notion/chart-processor";
 export function binDates(
   data: ChartDataPoint[],
   numBins: number,
-  fillEmptyWith: number | "latest" = 0
+  fillEmptyWith: number | "previous" = 0
 ): ChartDataPoint[] {
   const dateValues: Array<{ date: Date; value: number }> = [];
 
@@ -66,9 +66,9 @@ function fillEmptyBins(
   minTimestamp: number,
   maxTimestamp: number,
   binSize: number,
-  fillEmptyWith: number | "latest"
+  fillEmptyWith: number | "previous"
 ) {
-  if (fillEmptyWith === "latest") {
+  if (fillEmptyWith === "previous") {
     let currentValue = 0;
     for (let i = minTimestamp; i < maxTimestamp; i += binSize) {
       if (!bins.has(i)) {
