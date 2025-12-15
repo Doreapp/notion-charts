@@ -266,29 +266,31 @@ export default function ChartConfig({
 
             <Divider />
 
-            <Typography variant="subtitle2">Filters</Typography>
-            <FilterChipList
-              filters={filters}
-              properties={properties}
-              onDelete={handleDeleteFilter}
-            />
-            {!showFilterForm && (
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => setShowFilterForm(true)}
-                disabled={!selectedDatabaseId || isLoading}
-              >
-                Add Filter
-              </Button>
-            )}
-            {showFilterForm && (
-              <FilterConditionForm
+            <Stack direction="column">
+              <Typography variant="subtitle2">Filters</Typography>
+              <FilterChipList
+                filters={filters}
                 properties={properties}
-                onAdd={handleAddFilter}
-                onCancel={() => setShowFilterForm(false)}
+                onDelete={handleDeleteFilter}
               />
-            )}
+              {!showFilterForm && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setShowFilterForm(true)}
+                  disabled={!selectedDatabaseId || isLoading}
+                >
+                  Add Filter
+                </Button>
+              )}
+              {showFilterForm && (
+                <FilterConditionForm
+                  properties={properties}
+                  onAdd={handleAddFilter}
+                  onCancel={() => setShowFilterForm(false)}
+                />
+              )}
+            </Stack>
 
             <Button
               type="submit"

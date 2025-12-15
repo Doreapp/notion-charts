@@ -10,6 +10,7 @@ import {
   Stack,
   Button,
   Box,
+  Grid,
 } from "@mui/material";
 import type {
   FilterCondition,
@@ -192,79 +193,93 @@ export default function FilterConditionForm({
       }}
     >
       <Stack direction="column" gap={2}>
-        <FormControl fullWidth size="small">
-          <InputLabel>Property</InputLabel>
-          <Select
-            value={selectedPropertyId}
-            label="Property"
-            onChange={(e) => {
-              setSelectedPropertyId(e.target.value);
-              setOperator("");
-              setValue("");
-              setCheckboxValue(false);
-            }}
-          >
-            {filteredProperties.map((prop) => (
-              <MenuItem key={prop.id} value={prop.id}>
-                {prop.name} ({prop.type})
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {selectedProperty && (
-          <FormControl fullWidth size="small" disabled={!selectedPropertyId}>
-            <InputLabel>Operator</InputLabel>
-            <Select
-              value={operator}
-              label="Operator"
-              onChange={(e) => handleOperatorChange(e.target.value)}
-            >
-              {availableOperators.map((op) => (
-                <MenuItem key={op} value={op}>
-                  {op.replace(/_/g, " ")}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
-
-        {selectedProperty &&
-          operator &&
-          needsValue(operator) &&
-          selectedProperty.type === "checkbox" && (
+        <Grid container spacing={1}>
+          <Grid size={4}>
             <FormControl fullWidth size="small">
-              <InputLabel>Value</InputLabel>
+              <InputLabel>Property</InputLabel>
               <Select
-                value={checkboxValue ? "true" : "false"}
-                label="Value"
-                onChange={(e) => setCheckboxValue(e.target.value === "true")}
+                value={selectedPropertyId}
+                label="Property"
+                onChange={(e) => {
+                  setSelectedPropertyId(e.target.value);
+                  setOperator("");
+                  setValue("");
+                  setCheckboxValue(false);
+                }}
               >
-                <MenuItem value="true">True</MenuItem>
-                <MenuItem value="false">False</MenuItem>
+                {filteredProperties.map((prop) => (
+                  <MenuItem key={prop.id} value={prop.id}>
+                    {prop.name} ({prop.type})
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
-          )}
+          </Grid>
 
-        {selectedProperty &&
-          operator &&
-          needsValue(operator) &&
-          selectedProperty.type !== "checkbox" && (
-            <TextField
-              fullWidth
-              size="small"
-              label="Value"
-              type={
-                selectedProperty.type === "number"
-                  ? "number"
-                  : selectedProperty.type === "date"
-                    ? "date"
-                    : "text"
-              }
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-            />
-          )}
+          <Grid size={4}>
+            {selectedProperty && (
+              <FormControl
+                fullWidth
+                size="small"
+                disabled={!selectedPropertyId}
+              >
+                <InputLabel>Operator</InputLabel>
+                <Select
+                  value={operator}
+                  label="Operator"
+                  onChange={(e) => handleOperatorChange(e.target.value)}
+                >
+                  {availableOperators.map((op) => (
+                    <MenuItem key={op} value={op}>
+                      {op.replace(/_/g, " ")}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          </Grid>
+
+          <Grid size={4}>
+            {selectedProperty &&
+              operator &&
+              needsValue(operator) &&
+              selectedProperty.type === "checkbox" && (
+                <FormControl fullWidth size="small">
+                  <InputLabel>Value</InputLabel>
+                  <Select
+                    value={checkboxValue ? "true" : "false"}
+                    label="Value"
+                    onChange={(e) =>
+                      setCheckboxValue(e.target.value === "true")
+                    }
+                  >
+                    <MenuItem value="true">True</MenuItem>
+                    <MenuItem value="false">False</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
+
+            {selectedProperty &&
+              operator &&
+              needsValue(operator) &&
+              selectedProperty.type !== "checkbox" && (
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Value"
+                  type={
+                    selectedProperty.type === "number"
+                      ? "number"
+                      : selectedProperty.type === "date"
+                        ? "date"
+                        : "text"
+                  }
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                />
+              )}
+          </Grid>
+        </Grid>
 
         <Stack direction="row" gap={1} justifyContent="flex-end">
           <Button size="small" onClick={onCancel}>
