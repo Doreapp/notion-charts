@@ -106,6 +106,7 @@ export default function ChartWidget({
           xAxisLabel={chartData.xAxisLabel}
           yAxisLabel={chartData.yAxisLabel}
           fieldType={chartData.fieldType}
+          accumulate={config.accumulate}
         />
       )}
     </Stack>

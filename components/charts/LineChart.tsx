@@ -18,6 +18,7 @@ interface LineChartProps {
   xAxisLabel?: string;
   yAxisLabel?: string;
   fieldType?: string;
+  accumulate?: boolean;
 }
 
 export default function LineChart({
@@ -25,6 +26,7 @@ export default function LineChart({
   xAxisLabel,
   yAxisLabel,
   fieldType,
+  accumulate,
 }: LineChartProps) {
   const isDates =
     fieldType === "date" ||
@@ -33,9 +35,9 @@ export default function LineChart({
 
   const processedData = useMemo(() => {
     if (data.length === 0) return [];
-    if (isDates) return binDates(data, 10);
+    if (isDates) return binDates(data, 10, accumulate ? "latest" : 0);
     return data;
-  }, [data, isDates]);
+  }, [data, isDates, accumulate]);
 
   if (processedData.length === 0) {
     return null;

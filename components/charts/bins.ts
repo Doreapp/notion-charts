@@ -2,7 +2,8 @@ import { ChartDataPoint } from "@/lib/notion/chart-processor";
 
 export function binDates(
   data: ChartDataPoint[],
-  numBins: number
+  numBins: number,
+  fillEmptyWith: number | "latest" = 0
 ): ChartDataPoint[] {
   const dateValues: Array<{ date: Date; value: number }> = [];
 
@@ -34,10 +35,6 @@ export function binDates(
   const binSize = dateRange / numBins;
   const bins: Map<number, number> = new Map();
 
-  Array.from({ length: numBins }).forEach((_, index) => {
-    bins.set(minTimestamp + index * binSize, 0);
-  });
-
   dateValues.forEach(({ date, value }) => {
     const binIndex = Math.min(
       Math.floor((date.getTime() - minTimestamp) / binSize),
@@ -46,6 +43,8 @@ export function binDates(
     const binStart = minTimestamp + binIndex * binSize;
     bins.set(binStart, (bins.get(binStart) || 0) + value);
   });
+
+  fillEmptyBins(bins, minTimestamp, maxTimestamp, binSize, fillEmptyWith);
 
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp);
@@ -60,4 +59,29 @@ export function binDates(
     .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
 
   return binnedData;
+}
+
+function fillEmptyBins(
+  bins: Map<number, number>,
+  minTimestamp: number,
+  maxTimestamp: number,
+  binSize: number,
+  fillEmptyWith: number | "latest"
+) {
+  if (fillEmptyWith === "latest") {
+    let currentValue = 0;
+    for (let i = minTimestamp; i < maxTimestamp; i += binSize) {
+      if (!bins.has(i)) {
+        bins.set(i, currentValue || 0);
+      } else {
+        currentValue = bins.get(i) || currentValue;
+      }
+    }
+  } else {
+    for (let i = minTimestamp + binSize; i < maxTimestamp; i += binSize) {
+      if (!bins.has(i)) {
+        bins.set(i, fillEmptyWith || 0);
+      }
+    }
+  }
 }
