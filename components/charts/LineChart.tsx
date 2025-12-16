@@ -15,8 +15,6 @@ interface LineChartProps {
   data: ChartDataPoint[];
   xAxisLabel?: string;
   yAxisLabel?: string;
-  fieldType?: string;
-  accumulate?: boolean;
   onChartClick?: () => void;
 }
 
@@ -24,8 +22,6 @@ export default function LineChart({
   data,
   xAxisLabel,
   yAxisLabel,
-  fieldType,
-  accumulate,
   onChartClick,
 }: LineChartProps) {
   if (data.length === 0) {

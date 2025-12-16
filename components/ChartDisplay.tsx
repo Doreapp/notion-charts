@@ -137,8 +137,6 @@ export default function ChartWidget({
             data={chartData.data}
             xAxisLabel={chartData.xAxisLabel}
             yAxisLabel={chartData.yAxisLabel}
-            fieldType={chartData.fieldType}
-            accumulate={config.accumulate}
             onChartClick={handleCopyUrl}
           />
         </Box>
