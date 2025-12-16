@@ -174,6 +174,17 @@ export default function FilterConditionForm({
     setCheckboxValue(false);
   };
 
+  const shouldShowDropdown = useMemo(() => {
+    if (!selectedProperty || !operator || !needsValue(operator)) return false;
+    return (
+      (selectedProperty.type === "select" ||
+        selectedProperty.type === "status") &&
+      (operator === "equals" || operator === "does_not_equal") &&
+      selectedProperty.options &&
+      selectedProperty.options.length > 0
+    );
+  }, [selectedProperty, operator]);
+
   const isValid = useMemo(() => {
     if (!selectedProperty || !operator) return false;
     if (!needsValue(operator)) return true;
@@ -263,7 +274,29 @@ export default function FilterConditionForm({
             {selectedProperty &&
               operator &&
               needsValue(operator) &&
-              selectedProperty.type !== "checkbox" && (
+              selectedProperty.type !== "checkbox" &&
+              shouldShowDropdown && (
+                <FormControl fullWidth size="small">
+                  <InputLabel>Value</InputLabel>
+                  <Select
+                    value={value}
+                    label="Value"
+                    onChange={(e) => setValue(e.target.value)}
+                  >
+                    {selectedProperty.options?.map((option) => (
+                      <MenuItem key={option.id} value={option.name}>
+                        {option.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
+            {selectedProperty &&
+              operator &&
+              needsValue(operator) &&
+              selectedProperty.type !== "checkbox" &&
+              !shouldShowDropdown && (
                 <TextField
                   fullWidth
                   size="small"
