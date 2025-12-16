@@ -66,28 +66,26 @@ function applyAccumulation(data: ChartDataPoint[]): ChartDataPoint[] {
   });
 }
 
-export function processNotionDataForChart(
+function groupPagesByXAxis(
   pages: Array<PageObjectResponse>,
   xAxisFieldId: string,
   xAxisFieldType: string,
   aggregation: "count" | "sum" | "avg",
-  yAxisFieldId?: string,
-  sortOrder: "asc" | "desc" = "asc",
-  accumulate: boolean = false
-): ChartData {
+  yAxisFieldId?: string
+): Map<string, number[]> {
   const groupedData = new Map<string, number[]>();
   const isDateField = isDateFieldType(xAxisFieldType);
 
-  pages.forEach((page) => {
+  for (const page of pages) {
     const xAxisProperty = page.properties?.[xAxisFieldId];
-    if (!xAxisProperty) return;
+    if (!xAxisProperty) continue;
 
     let xValue = extractXAxisValue(xAxisProperty);
-    if (xValue === null) return;
+    if (xValue === null) continue;
 
     if (isDateField) {
       const normalizedDate = normalizeDateToDay(xValue);
-      if (normalizedDate === null) return;
+      if (normalizedDate === null) continue;
       xValue = normalizedDate;
     }
 
@@ -102,54 +100,87 @@ export function processNotionDataForChart(
       }
 
       const yAxisProperty = page.properties?.[yAxisFieldId];
-      if (!yAxisProperty) return;
+      if (!yAxisProperty) continue;
 
       const yValue = extractYAxisNumericValue(yAxisProperty);
-      if (yValue === null) return;
+      if (yValue === null) continue;
 
       const current = groupedData.get(xValue) || [];
       groupedData.set(xValue, [...current, yValue]);
     }
-  });
-
-  const data: ChartDataPoint[] = Array.from(groupedData.entries()).map(
-    ([name, values]) => {
-      let aggregatedValue: number;
-
-      if (aggregation === "count") {
-        aggregatedValue = values.length;
-      } else if (aggregation === "sum") {
-        aggregatedValue = values.reduce((sum, val) => sum + val, 0);
-      } else {
-        aggregatedValue =
-          values.reduce((sum, val) => sum + val, 0) / values.length;
-      }
-
-      return { name, value: aggregatedValue };
-    }
-  );
-
-  const sortedData = sortDataPoints(data, xAxisFieldType, sortOrder);
-
-  let dataWithFilledDays = sortedData;
-  if (isDateField && sortedData.length > 0) {
-    dataWithFilledDays = fillMissingDays(sortedData);
   }
 
+  return groupedData;
+}
+
+function aggregateGroupedData(
+  groupedData: Map<string, number[]>,
+  aggregation: "count" | "sum" | "avg"
+): ChartDataPoint[] {
+  return Array.from(groupedData.entries()).map(([name, values]) => {
+    let aggregatedValue: number;
+
+    if (aggregation === "count") {
+      aggregatedValue = values.length;
+    } else if (aggregation === "sum") {
+      aggregatedValue = values.reduce((sum, val) => sum + val, 0);
+    } else {
+      aggregatedValue =
+        values.reduce((sum, val) => sum + val, 0) / values.length;
+    }
+
+    return { name, value: aggregatedValue };
+  });
+}
+
+function processDateFields(
+  data: ChartDataPoint[],
+  xAxisFieldType: string
+): ChartDataPoint[] {
+  const isDateField = isDateFieldType(xAxisFieldType);
+  if (isDateField && data.length > 0) {
+    return fillMissingDays(data);
+  }
+  return data;
+}
+
+function getYAxisLabel(aggregation: "count" | "sum" | "avg"): string {
+  if (aggregation === "sum") {
+    return "Sum";
+  }
+  if (aggregation === "avg") {
+    return "Average";
+  }
+  return "Count";
+}
+
+export function processNotionDataForChart(
+  pages: Array<PageObjectResponse>,
+  xAxisFieldId: string,
+  xAxisFieldType: string,
+  aggregation: "count" | "sum" | "avg",
+  yAxisFieldId?: string,
+  sortOrder: "asc" | "desc" = "asc",
+  accumulate: boolean = false
+): ChartData {
+  const groupedData = groupPagesByXAxis(
+    pages,
+    xAxisFieldId,
+    xAxisFieldType,
+    aggregation,
+    yAxisFieldId
+  );
+
+  const aggregatedData = aggregateGroupedData(groupedData, aggregation);
+  const sortedData = sortDataPoints(aggregatedData, xAxisFieldType, sortOrder);
+  const dataWithFilledDays = processDateFields(sortedData, xAxisFieldType);
   const finalData = accumulate
     ? applyAccumulation(dataWithFilledDays)
     : dataWithFilledDays;
 
-  let yAxisLabel = "Count";
-  if (aggregation === "sum") {
-    yAxisLabel = "Sum";
-  } else if (aggregation === "avg") {
-    yAxisLabel = "Average";
-  }
-
   return {
     data: finalData,
     xAxisLabel: "Value",
-    yAxisLabel,
+    yAxisLabel: getYAxisLabel(aggregation),
   };
 }
