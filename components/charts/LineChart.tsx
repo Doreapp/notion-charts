@@ -35,7 +35,7 @@ export default function LineChart({
 
   const processedData = useMemo(() => {
     if (data.length === 0) return [];
-    if (isDates) return binDates(data, 10, accumulate ? "latest" : 0);
+    if (isDates) return binDates(data, 10, accumulate ? "previous" : 0);
     return data;
   }, [data, isDates, accumulate]);
 
