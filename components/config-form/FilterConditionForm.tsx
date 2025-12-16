@@ -46,12 +46,14 @@ const NUMBER_OPERATORS: NumberFilterOperator[] = [
 
 const SELECT_OPERATORS: SelectFilterOperator[] = [
   "equals",
+  "does_not_equal",
   "is_empty",
   "is_not_empty",
 ];
 
 const STATUS_OPERATORS: StatusFilterOperator[] = [
   "equals",
+  "does_not_equal",
   "is_empty",
   "is_not_empty",
 ];
