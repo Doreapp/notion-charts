@@ -4,7 +4,7 @@ interface Database {
   url: string;
 }
 
-export interface PropertyOption {
+interface PropertyOption {
   id: string;
   name: string;
 }
