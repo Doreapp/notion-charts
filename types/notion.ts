@@ -4,10 +4,16 @@ interface Database {
   url: string;
 }
 
+export interface PropertyOption {
+  id: string;
+  name: string;
+}
+
 interface Property {
   id: string;
   name: string;
   type: string;
+  options?: PropertyOption[];
 }
 
 export type DatabaseWithProperties = Database & {
