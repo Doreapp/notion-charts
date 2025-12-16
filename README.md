@@ -16,7 +16,72 @@ Proof-of-concept a system to embed charts in Notion, using data from Notion data
 
 ![Graph](./docs/graph.png)
 
-## How to use
+## Deployment
+
+We suggest deploying your own instance on Vercel.
+
+Here is an how to guide for that.
+
+### 1. Create a GitHub repository
+
+Let's name it `notion-charts-deploy`, for the example.
+
+### 2. Clone and setup the repo
+
+- First, clone it locally.
+- Then, add `notion-charts` as a submodule
+
+  ```bash
+  git submodule add https://github.com/Doreapp/notion-charts notion-charts
+  ```
+
+- And commit your changes
+
+  ```bash
+  git add .
+  git commit -m "Add notion-charts as submodule"
+  git push origin main
+  ```
+
+- Then, add a specific script that will be used to setup deployment.\
+  Let's name it `setup-vercel.sh`.
+  Here is its content:
+
+  ```bash
+  # setup-vercel.sh
+  git submodule update --init --recursive
+  cp -R notion-charts/* .
+  npm install
+  ```
+
+- Make it executable
+
+  ```bash
+  chmod +x setup-vercel.sh
+  ```
+
+- Commit it
+
+  ```bash
+  git add setup-vercel.sh
+  git commit -m "Add deployment script"
+  git push origin main
+  ```
+
+### 3. Create a project on Vercel
+
+- Login or create an account on Vercel
+- Then, create a new project based on the GitHub repository you just created
+- Select `Next.js` as Framework preset
+- Within "Build and Output Settings"
+  - Override "Build command" to `npm run build`
+  - Override "Install command" to `./setup-vercel.sh`
+- Under "Environment Variables"
+  - Add `NOTION_INTEGRATION_SECRET` variable, setted to your Notion intergration's secret
+  - Add `API_SECRET` setted to a custom secret key (its recommended to randomly generate it). Save it somewhere, you'll need to prompt it when you first access the app.
+- Press "Deploy"
+
+## Development
 
 ### 1. Clone this repository
 
