@@ -52,6 +52,59 @@ function extractYAxisNumericValue(
   return null;
 }
 
+function normalizeDateToDay(dateString: string): string | null {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return null;
+  }
+  return date.toISOString().split("T")[0];
+}
+
+function isDateFieldType(fieldType: string): boolean {
+  return (
+    fieldType === "date" ||
+    fieldType === "created_time" ||
+    fieldType === "last_edited_time"
+  );
+}
+
+function getAllDaysInRange(startDate: string, endDate: string): string[] {
+  const days: string[] = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const current = new Date(start);
+
+  while (current <= end) {
+    days.push(current.toISOString().split("T")[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  return days;
+}
+
+function fillMissingDays(data: ChartDataPoint[]): ChartDataPoint[] {
+  if (data.length === 0) return data;
+
+  const firstDate = data[0].name;
+  const lastDate = data[data.length - 1].name;
+  const allDays = getAllDaysInRange(firstDate, lastDate);
+
+  const dataMap = new Map<string, number>();
+  data.forEach((point) => {
+    dataMap.set(point.name, point.value);
+  });
+
+  const filledData: ChartDataPoint[] = allDays.map((day) => {
+    if (dataMap.has(day)) {
+      return { name: day, value: dataMap.get(day)! };
+    } else {
+      return { name: day, value: 0 };
+    }
+  });
+
+  return filledData;
+}
+
 function sortDataPoints(
   data: ChartDataPoint[],
   xAxisFieldType: string,
@@ -108,13 +161,20 @@ export function processNotionDataForChart(
   accumulate: boolean = false
 ): ChartData {
   const groupedData = new Map<string, number[]>();
+  const isDateField = isDateFieldType(xAxisFieldType);
 
   pages.forEach((page) => {
     const xAxisProperty = page.properties?.[xAxisFieldId];
     if (!xAxisProperty) return;
 
-    const xValue = extractXAxisValue(xAxisProperty);
+    let xValue = extractXAxisValue(xAxisProperty);
     if (xValue === null) return;
+
+    if (isDateField) {
+      const normalizedDate = normalizeDateToDay(xValue);
+      if (normalizedDate === null) return;
+      xValue = normalizedDate;
+    }
 
     if (aggregation === "count") {
       const current = groupedData.get(xValue) || [];
@@ -155,7 +215,15 @@ export function processNotionDataForChart(
   );
 
   const sortedData = sortDataPoints(data, xAxisFieldType, sortOrder);
-  const finalData = accumulate ? applyAccumulation(sortedData) : sortedData;
+
+  let dataWithFilledDays = sortedData;
+  if (isDateField && sortedData.length > 0) {
+    dataWithFilledDays = fillMissingDays(sortedData);
+  }
+
+  const finalData = accumulate
+    ? applyAccumulation(dataWithFilledDays)
+    : dataWithFilledDays;
 
   let yAxisLabel = "Count";
   if (aggregation === "sum") {
