@@ -1,8 +1,9 @@
 "use client";
 
-import { CircularProgress, Alert, Stack } from "@mui/material";
-import { useEffect } from "react";
+import { CircularProgress, Alert, Stack, Box } from "@mui/material";
+import { useEffect, useState } from "react";
 import LineChart from "./charts/LineChart";
+import UrlOverlay from "./UrlOverlay";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
 import useSWR from "swr";
 import { fetcher, UnauthorizedError } from "@/utils/fetcher";
@@ -29,6 +30,9 @@ export default function ChartWidget({
   config,
   onAuthError,
 }: ChartDisplayProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const queryParams = new URLSearchParams({
     database_id: config.databaseId,
     x_axis_field_id: config.xAxisFieldId,
@@ -50,6 +54,18 @@ export default function ChartWidget({
     `/api/chart-data?${queryParams.toString()}`,
     fetcher
   );
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2500);
+    } catch (err) {
+      console.error("Failed to copy URL:", err);
+    }
+  };
 
   useEffect(() => {
     if (error instanceof UnauthorizedError && onAuthError) {
@@ -101,13 +117,31 @@ export default function ChartWidget({
           <Alert severity="info">No data available</Alert>
         </Stack>
       ) : (
-        <LineChart
-          data={chartData.data}
-          xAxisLabel={chartData.xAxisLabel}
-          yAxisLabel={chartData.yAxisLabel}
-          fieldType={chartData.fieldType}
-          accumulate={config.accumulate}
-        />
+        <Box
+          sx={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            flex: 1,
+          }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <UrlOverlay
+            isVisible={isHovered}
+            currentUrl={window.location.href}
+            copied={copied}
+            onCopy={handleCopyUrl}
+          />
+          <LineChart
+            data={chartData.data}
+            xAxisLabel={chartData.xAxisLabel}
+            yAxisLabel={chartData.yAxisLabel}
+            fieldType={chartData.fieldType}
+            accumulate={config.accumulate}
+            onChartClick={handleCopyUrl}
+          />
+        </Box>
       )}
     </Stack>
   );

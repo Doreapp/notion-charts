@@ -19,6 +19,7 @@ interface LineChartProps {
   yAxisLabel?: string;
   fieldType?: string;
   accumulate?: boolean;
+  onChartClick?: () => void;
 }
 
 export default function LineChart({
@@ -27,6 +28,7 @@ export default function LineChart({
   yAxisLabel,
   fieldType,
   accumulate,
+  onChartClick,
 }: LineChartProps) {
   const isDates =
     fieldType === "date" ||
@@ -48,6 +50,8 @@ export default function LineChart({
       <RechartsLineChart
         data={processedData}
         margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+        onClick={onChartClick}
+        style={{ cursor: onChartClick ? "pointer" : "default" }}
       >
         <CartesianGrid
           strokeDasharray="3 3"
