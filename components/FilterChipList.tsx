@@ -13,6 +13,7 @@ interface FilterChipListProps {
 function getOperatorLabel(operator: string): string {
   const labels: Record<string, string> = {
     equals: "=",
+    does_not_equal: "≠",
     contains: "contains",
     greater_than: ">",
     less_than: "<",

@@ -25,8 +25,16 @@ export type NumberFilterOperator =
   | "less_than"
   | "is_empty"
   | "is_not_empty";
-export type SelectFilterOperator = "equals" | "is_empty" | "is_not_empty";
-export type StatusFilterOperator = "equals" | "is_empty" | "is_not_empty";
+export type SelectFilterOperator =
+  | "equals"
+  | "does_not_equal"
+  | "is_empty"
+  | "is_not_empty";
+export type StatusFilterOperator =
+  | "equals"
+  | "does_not_equal"
+  | "is_empty"
+  | "is_not_empty";
 export type DateFilterOperator =
   | "equals"
   | "before"

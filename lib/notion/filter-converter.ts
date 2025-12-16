@@ -102,6 +102,7 @@ function convertSelectFilter(
 ): NotionFilterProperty {
   const selectCondition: {
     equals?: string;
+    does_not_equal?: string;
     is_empty?: true;
     is_not_empty?: true;
   } = {};
@@ -110,6 +111,11 @@ function convertSelectFilter(
     case "equals":
       if (condition.value !== undefined) {
         selectCondition.equals = condition.value;
+      }
+      break;
+    case "does_not_equal":
+      if (condition.value !== undefined) {
+        selectCondition.does_not_equal = condition.value;
       }
       break;
     case "is_empty":
@@ -132,6 +138,7 @@ function convertStatusFilter(
 ): NotionFilterProperty {
   const statusCondition: {
     equals?: string;
+    does_not_equal?: string;
     is_empty?: true;
     is_not_empty?: true;
   } = {};
@@ -140,6 +147,11 @@ function convertStatusFilter(
     case "equals":
       if (condition.value !== undefined) {
         statusCondition.equals = condition.value;
+      }
+      break;
+    case "does_not_equal":
+      if (condition.value !== undefined) {
+        statusCondition.does_not_equal = condition.value;
       }
       break;
     case "is_empty":
