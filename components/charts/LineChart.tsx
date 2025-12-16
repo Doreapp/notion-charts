@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -11,7 +10,6 @@ import {
   Tooltip,
 } from "recharts";
 import type { ChartDataPoint } from "@/lib/notion/chart-processor";
-import { binDates } from "./bins";
 
 interface LineChartProps {
   data: ChartDataPoint[];
@@ -30,25 +28,14 @@ export default function LineChart({
   accumulate,
   onChartClick,
 }: LineChartProps) {
-  const isDates =
-    fieldType === "date" ||
-    fieldType === "created_time" ||
-    fieldType === "last_edited_time";
-
-  const processedData = useMemo(() => {
-    if (data.length === 0) return [];
-    if (isDates) return binDates(data, 10, accumulate ? "previous" : 0);
-    return data;
-  }, [data, isDates, accumulate]);
-
-  if (processedData.length === 0) {
+  if (data.length === 0) {
     return null;
   }
 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RechartsLineChart
-        data={processedData}
+        data={data}
         margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
         onClick={onChartClick}
         style={{ cursor: onChartClick ? "pointer" : "default" }}
