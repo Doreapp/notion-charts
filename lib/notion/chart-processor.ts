@@ -4,6 +4,7 @@ import {
   isDateFieldType,
   fillMissingDays,
 } from "./date-utils";
+import { sortDataPoints } from "./sort-utils";
 
 export interface ChartDataPoint {
   name: string;
@@ -55,44 +56,6 @@ function extractYAxisNumericValue(
   }
 
   return null;
-}
-
-function sortDataPoints(
-  data: ChartDataPoint[],
-  xAxisFieldType: string,
-  sortOrder: "asc" | "desc"
-): ChartDataPoint[] {
-  const sorted = [...data].sort((a, b) => {
-    let comparison = 0;
-
-    if (xAxisFieldType === "number") {
-      const numA = parseFloat(a.name);
-      const numB = parseFloat(b.name);
-      if (!isNaN(numA) && !isNaN(numB)) {
-        comparison = numA - numB;
-      } else {
-        comparison = a.name.localeCompare(b.name);
-      }
-    } else if (
-      xAxisFieldType === "date" ||
-      xAxisFieldType === "created_time" ||
-      xAxisFieldType === "last_edited_time"
-    ) {
-      const dateA = new Date(a.name).getTime();
-      const dateB = new Date(b.name).getTime();
-      if (!isNaN(dateA) && !isNaN(dateB)) {
-        comparison = dateA - dateB;
-      } else {
-        comparison = a.name.localeCompare(b.name);
-      }
-    } else {
-      comparison = a.name.localeCompare(b.name);
-    }
-
-    return sortOrder === "desc" ? -comparison : comparison;
-  });
-
-  return sorted;
 }
 
 function applyAccumulation(data: ChartDataPoint[]): ChartDataPoint[] {
