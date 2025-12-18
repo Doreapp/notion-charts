@@ -2,9 +2,8 @@
 
 import { CircularProgress, Alert, Stack, Box, IconButton } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import LineChart from "./charts/LineChart";
-import UrlOverlay from "./UrlOverlay";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
 import useSWR from "swr";
 import { fetcher, UnauthorizedError } from "@/utils/fetcher";
