@@ -5,7 +5,6 @@ import { useEffect, useState, useMemo } from "react";
 import { Box, Stack, TextField, IconButton } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
-import { useNotionTheme } from "@/hooks/use-notion-theme";
 import ChartConfig from "@/components/ChartConfig";
 import ChartDisplay from "@/components/ChartDisplay";
 import SecretInput from "@/components/SecretInput";
@@ -18,7 +17,6 @@ import {
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
 
 export default function ConfigPage() {
-  const theme = useNotionTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
 

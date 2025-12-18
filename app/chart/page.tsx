@@ -3,7 +3,6 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Box } from "@mui/material";
-import { useNotionTheme } from "@/hooks/use-notion-theme";
 import ChartDisplay from "@/components/ChartDisplay";
 import SecretInput from "@/components/SecretInput";
 import { hasSecret, clearSecret } from "@/utils/secret-storage";
@@ -14,7 +13,6 @@ import {
 } from "@/utils/login-redirect";
 
 export default function ChartPage() {
-  const theme = useNotionTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
 
