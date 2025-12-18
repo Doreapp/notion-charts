@@ -1,7 +1,5 @@
 "use client";
 
-import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Box } from "@mui/material";
@@ -45,72 +43,63 @@ export default function ChartPage() {
 
   if (!hasStoredSecret) {
     return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Box
-          sx={{
-            width: "100%",
-            height: "100vh",
-            p: 2,
-            boxSizing: "border-box",
-            overflow: "auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <SecretInput
-            onSecretStored={handleSecretStored}
-            authFailed={authFailed}
-            nextUrl={getCurrentUrlWithParams()}
-          />
-        </Box>
-      </ThemeProvider>
+      <Box
+        sx={{
+          width: "100%",
+          height: "100vh",
+          p: 2,
+          boxSizing: "border-box",
+          overflow: "auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <SecretInput
+          onSecretStored={handleSecretStored}
+          authFailed={authFailed}
+          nextUrl={getCurrentUrlWithParams()}
+        />
+      </Box>
     );
   }
 
   if (!config) {
     return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Box
-          sx={{
-            width: "100%",
-            height: "100vh",
-            p: 2,
-            boxSizing: "border-box",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          Invalid chart configuration. Please configure the chart first.
-        </Box>
-      </ThemeProvider>
-    );
-  }
-
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
       <Box
         sx={{
           width: "100%",
           height: "100vh",
-          p: 1,
+          p: 2,
           boxSizing: "border-box",
-          overflow: "hidden",
           display: "flex",
-          flexDirection: "column",
-          position: "relative",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <ChartDisplay
-          config={config}
-          onAuthError={handleAuthError}
-          showConfigButton={true}
-        />
+        Invalid chart configuration. Please configure the chart first.
       </Box>
-    </ThemeProvider>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        height: "100vh",
+        p: 1,
+        boxSizing: "border-box",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+      }}
+    >
+      <ChartDisplay
+        config={config}
+        onAuthError={handleAuthError}
+        showConfigButton={true}
+      />
+    </Box>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ThemeHolder from "@/components/ThemeHolder";
 
 export const metadata: Metadata = {
   title: "Notion Chart Widget",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ThemeHolder>{children}</ThemeHolder>
+      </body>
     </html>
   );
 }
