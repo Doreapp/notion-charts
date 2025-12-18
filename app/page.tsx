@@ -1,7 +1,5 @@
 "use client";
 
-import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
 import "./globals.css";
 import { useNotionTheme } from "@/hooks/use-notion-theme";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -32,22 +30,19 @@ export default function LoginPage() {
   const nextUrl = getNextUrlFromParams(searchParams) || "/config";
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box
-        sx={{
-          width: "100%",
-          height: "100vh",
-          p: 2,
-          boxSizing: "border-box",
-          overflow: "auto",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <SecretInput onSecretStored={handleSecretStored} nextUrl={nextUrl} />
-      </Box>
-    </ThemeProvider>
+    <Box
+      sx={{
+        width: "100%",
+        height: "100vh",
+        p: 2,
+        boxSizing: "border-box",
+        overflow: "auto",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <SecretInput onSecretStored={handleSecretStored} nextUrl={nextUrl} />
+    </Box>
   );
 }

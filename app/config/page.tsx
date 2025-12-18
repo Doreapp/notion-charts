@@ -1,7 +1,5 @@
 "use client";
 
-import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { Box, Stack, TextField, IconButton } from "@mui/material";
@@ -77,104 +75,98 @@ export default function ConfigPage() {
 
   if (!hasStoredSecret) {
     return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Box
-          sx={{
-            width: "100%",
-            height: "100vh",
-            p: 2,
-            boxSizing: "border-box",
-            overflow: "auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <SecretInput
-            onSecretStored={handleSecretStored}
-            authFailed={authFailed}
-            nextUrl={getCurrentUrlWithParams()}
-          />
-        </Box>
-      </ThemeProvider>
+      <Box
+        sx={{
+          width: "100%",
+          height: "100vh",
+          p: 2,
+          boxSizing: "border-box",
+          overflow: "auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <SecretInput
+          onSecretStored={handleSecretStored}
+          authFailed={authFailed}
+          nextUrl={getCurrentUrlWithParams()}
+        />
+      </Box>
     );
   }
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Stack
-        spacing={3}
-        direction={{ xs: "column", md: "row" }}
-        width="100%"
-        height="100vh"
-        alignItems="center"
-        p={3}
-      >
-        <Box sx={{ flex: { xs: 0, md: 1 } }}>
-          <ChartConfig
-            onConfigChange={handleConfigChange}
-            initialConfig={config || undefined}
-            onAuthError={handleAuthError}
-          />
-        </Box>
+    <Stack
+      spacing={3}
+      direction={{ xs: "column", md: "row" }}
+      width="100%"
+      height="100vh"
+      alignItems="center"
+      p={3}
+    >
+      <Box sx={{ flex: { xs: 0, md: 1 } }}>
+        <ChartConfig
+          onConfigChange={handleConfigChange}
+          initialConfig={config || undefined}
+          onAuthError={handleAuthError}
+        />
+      </Box>
 
-        {config && (
-          <>
-            <Box sx={{ flex: { xs: 0, md: 1 } }}>
-              <Stack spacing={2}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    height: "400px",
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 1,
-                    overflow: "hidden",
-                    p: 2,
-                  }}
-                >
-                  <ChartDisplay config={config} onAuthError={handleAuthError} />
-                </Box>
+      {config && (
+        <>
+          <Box sx={{ flex: { xs: 0, md: 1 } }}>
+            <Stack spacing={2}>
+              <Box
+                sx={{
+                  width: "100%",
+                  height: "400px",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 1,
+                  overflow: "hidden",
+                  p: 2,
+                }}
+              >
+                <ChartDisplay config={config} onAuthError={handleAuthError} />
+              </Box>
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    p: 1,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 1,
-                    backgroundColor: "background.paper",
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  p: 1,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 1,
+                  backgroundColor: "background.paper",
+                }}
+              >
+                <TextField
+                  value={chartUrl}
+                  fullWidth
+                  size="small"
+                  InputProps={{
+                    readOnly: true,
+                    sx: {
+                      fontFamily: "monospace",
+                      fontSize: "0.875rem",
+                    },
                   }}
+                />
+                <IconButton
+                  onClick={handleCopyChartUrl}
+                  size="small"
+                  color={copied ? "success" : "default"}
                 >
-                  <TextField
-                    value={chartUrl}
-                    fullWidth
-                    size="small"
-                    InputProps={{
-                      readOnly: true,
-                      sx: {
-                        fontFamily: "monospace",
-                        fontSize: "0.875rem",
-                      },
-                    }}
-                  />
-                  <IconButton
-                    onClick={handleCopyChartUrl}
-                    size="small"
-                    color={copied ? "success" : "default"}
-                  >
-                    {copied ? <CheckIcon /> : <ContentCopyIcon />}
-                  </IconButton>
-                </Box>
-              </Stack>
-            </Box>
-          </>
-        )}
-      </Stack>
-    </ThemeProvider>
+                  {copied ? <CheckIcon /> : <ContentCopyIcon />}
+                </IconButton>
+              </Box>
+            </Stack>
+          </Box>
+        </>
+      )}
+    </Stack>
   );
 }
