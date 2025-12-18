@@ -102,7 +102,8 @@ export default function ConfigPage() {
       direction={{ xs: "column", md: "row" }}
       width="100%"
       height="100vh"
-      alignItems="center"
+      overflow="auto"
+      alignItems={{ xs: "stretch", md: "center" }}
       p={3}
     >
       <Box sx={{ flex: { xs: 0, md: 1 } }}>
