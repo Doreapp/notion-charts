@@ -15,14 +15,12 @@ interface LineChartProps {
   data: ChartDataPoint[];
   xAxisLabel?: string;
   yAxisLabel?: string;
-  onChartClick?: () => void;
 }
 
 export default function LineChart({
   data,
   xAxisLabel,
   yAxisLabel,
-  onChartClick,
 }: LineChartProps) {
   if (data.length === 0) {
     return null;
@@ -33,8 +31,6 @@ export default function LineChart({
       <RechartsLineChart
         data={data}
         margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
-        onClick={onChartClick}
-        style={{ cursor: onChartClick ? "pointer" : "default" }}
       >
         <CartesianGrid
           strokeDasharray="3 3"

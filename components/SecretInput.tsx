@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Box,
   TextField,
@@ -16,14 +17,17 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { storeSecret } from "@/utils/secret-storage";
 
 interface SecretInputProps {
-  onSecretStored: () => void;
+  onSecretStored?: () => void;
   authFailed?: boolean;
+  nextUrl?: string;
 }
 
 export default function SecretInput({
   onSecretStored,
   authFailed,
+  nextUrl,
 }: SecretInputProps) {
+  const router = useRouter();
   const [secret, setSecret] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +46,13 @@ export default function SecretInput({
 
     try {
       storeSecret(secret.trim());
-      onSecretStored();
+
+      if (onSecretStored) {
+        onSecretStored();
+      }
+
+      const redirectUrl = nextUrl || "/config";
+      router.push(redirectUrl);
     } catch (err) {
       setError(
         err instanceof Error
