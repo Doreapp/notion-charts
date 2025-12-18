@@ -10,9 +10,13 @@ Proof-of-concept a system to embed charts in Notion, using data from Notion data
 
 ## Example
 
+_Configuration page_
+
 ![Configuration](./docs/config.png)
 
 ---
+
+_Integration in Notion_
 
 ![Graph](./docs/graph.png)
 
