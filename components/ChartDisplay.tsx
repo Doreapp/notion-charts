@@ -1,12 +1,14 @@
 "use client";
 
-import { CircularProgress, Alert, Stack, Box } from "@mui/material";
+import { CircularProgress, Alert, Stack, Box, IconButton } from "@mui/material";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { useEffect, useState } from "react";
 import LineChart from "./charts/LineChart";
 import UrlOverlay from "./UrlOverlay";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
 import useSWR from "swr";
 import { fetcher, UnauthorizedError } from "@/utils/fetcher";
+import { configToUrlParams } from "@/utils/config-params";
 
 interface ChartDataPoint {
   name: string;
@@ -24,14 +26,19 @@ interface ChartDataResponse {
 interface ChartDisplayProps {
   config: ChartConfigType;
   onAuthError?: () => void;
+  showConfigButton?: boolean;
 }
 
 export default function ChartWidget({
   config,
   onAuthError,
+  showConfigButton = false,
 }: ChartDisplayProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const handleOpenConfig = () => {
+    const params = configToUrlParams(config);
+    const configUrl = `/config?${params.toString()}`;
+    window.open(configUrl, "_blank");
+  };
 
   const queryParams = new URLSearchParams({
     database_id: config.databaseId,
@@ -54,18 +61,6 @@ export default function ChartWidget({
     `/api/chart-data?${queryParams.toString()}`,
     fetcher
   );
-
-  const handleCopyUrl = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => {
-        setCopied(false);
-      }, 2500);
-    } catch (err) {
-      console.error("Failed to copy URL:", err);
-    }
-  };
 
   useEffect(() => {
     if (error instanceof UnauthorizedError && onAuthError) {
@@ -106,41 +101,70 @@ export default function ChartWidget({
   }
 
   return (
-    <Stack direction="column" flex={1} minHeight={0} width="100%" height="100%">
-      {!chartData || chartData.data.length === 0 ? (
-        <Stack
-          direction="row"
-          justifyContent="center"
-          alignItems="center"
-          flex={1}
-        >
-          <Alert severity="info">No data available</Alert>
-        </Stack>
-      ) : (
+    <Box
+      sx={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        flex: 1,
+        minHeight: 0,
+      }}
+    >
+      {showConfigButton && (
         <Box
           sx={{
-            position: "relative",
-            width: "100%",
-            height: "100%",
-            flex: 1,
+            position: "absolute",
+            top: 4,
+            left: 4,
+            zIndex: 10,
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
-          <UrlOverlay
-            isVisible={isHovered}
-            currentUrl={window.location.href}
-            copied={copied}
-            onCopy={handleCopyUrl}
-          />
-          <LineChart
-            data={chartData.data}
-            xAxisLabel={chartData.xAxisLabel}
-            yAxisLabel={chartData.yAxisLabel}
-            onChartClick={handleCopyUrl}
-          />
+          <IconButton
+            onClick={handleOpenConfig}
+            size="small"
+            sx={{
+              "&:hover": {
+                backgroundColor: "action.hover",
+              },
+            }}
+          >
+            <SettingsIcon fontSize="small" />
+          </IconButton>
         </Box>
       )}
-    </Stack>
+      <Stack
+        direction="column"
+        flex={1}
+        minHeight={0}
+        width="100%"
+        height="100%"
+      >
+        {!chartData || chartData.data.length === 0 ? (
+          <Stack
+            direction="row"
+            justifyContent="center"
+            alignItems="center"
+            flex={1}
+          >
+            <Alert severity="info">No data available</Alert>
+          </Stack>
+        ) : (
+          <Box
+            sx={{
+              position: "relative",
+              width: "100%",
+              height: "100%",
+              flex: 1,
+            }}
+          >
+            <LineChart
+              data={chartData.data}
+              xAxisLabel={chartData.xAxisLabel}
+              yAxisLabel={chartData.yAxisLabel}
+            />
+          </Box>
+        )}
+      </Stack>
+    </Box>
   );
 }

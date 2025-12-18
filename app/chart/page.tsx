@@ -1,0 +1,116 @@
+"use client";
+
+import { ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Box } from "@mui/material";
+import { useNotionTheme } from "@/hooks/use-notion-theme";
+import ChartDisplay from "@/components/ChartDisplay";
+import SecretInput from "@/components/SecretInput";
+import { hasSecret, clearSecret } from "@/utils/secret-storage";
+import { urlParamsToConfig } from "@/utils/config-params";
+import {
+  buildLoginRedirectUrl,
+  getCurrentUrlWithParams,
+} from "@/utils/login-redirect";
+
+export default function ChartPage() {
+  const theme = useNotionTheme();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [hasStoredSecret, setHasStoredSecret] = useState(hasSecret());
+  const [authFailed, setAuthFailed] = useState(false);
+
+  const config = urlParamsToConfig(searchParams);
+
+  useEffect(() => {
+    if (!hasStoredSecret) {
+      const currentUrl = getCurrentUrlWithParams();
+      const loginUrl = buildLoginRedirectUrl(currentUrl);
+      router.replace(loginUrl);
+    }
+  }, [hasStoredSecret, router]);
+
+  const handleSecretStored = () => {
+    setHasStoredSecret(true);
+  };
+
+  const handleAuthError = () => {
+    clearSecret();
+    setHasStoredSecret(false);
+    setAuthFailed(true);
+  };
+
+  if (!hasStoredSecret) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box
+          sx={{
+            width: "100%",
+            height: "100vh",
+            p: 2,
+            boxSizing: "border-box",
+            overflow: "auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <SecretInput
+            onSecretStored={handleSecretStored}
+            authFailed={authFailed}
+            nextUrl={getCurrentUrlWithParams()}
+          />
+        </Box>
+      </ThemeProvider>
+    );
+  }
+
+  if (!config) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box
+          sx={{
+            width: "100%",
+            height: "100vh",
+            p: 2,
+            boxSizing: "border-box",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          Invalid chart configuration. Please configure the chart first.
+        </Box>
+      </ThemeProvider>
+    );
+  }
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box
+        sx={{
+          width: "100%",
+          height: "100vh",
+          p: 1,
+          boxSizing: "border-box",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          position: "relative",
+        }}
+      >
+        <ChartDisplay
+          config={config}
+          onAuthError={handleAuthError}
+          showConfigButton={true}
+        />
+      </Box>
+    </ThemeProvider>
+  );
+}
