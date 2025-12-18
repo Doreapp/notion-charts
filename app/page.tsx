@@ -1,7 +1,6 @@
 "use client";
 
 import "./globals.css";
-import { useNotionTheme } from "@/hooks/use-notion-theme";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Box } from "@mui/material";
@@ -10,7 +9,6 @@ import { hasSecret } from "@/utils/secret-storage";
 import { getNextUrlFromParams } from "@/utils/login-redirect";
 
 export default function LoginPage() {
-  const theme = useNotionTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [hasStoredSecret, setHasStoredSecret] = useState(hasSecret());
