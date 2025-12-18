@@ -4,14 +4,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
-import {
-  Box,
-  Stack,
-  Paper,
-  Typography,
-  TextField,
-  IconButton,
-} from "@mui/material";
+import { Box, Stack, TextField, IconButton } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
 import { useNotionTheme } from "@/hooks/use-notion-theme";
