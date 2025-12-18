@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import { storeSecret } from "@/utils/secret-storage";
 
 interface SecretInputProps {
   onSecretStored?: () => void;
@@ -45,7 +44,19 @@ export default function SecretInput({
     setIsSubmitting(true);
 
     try {
-      storeSecret(secret.trim());
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ secret: secret.trim() }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Invalid or missing API secret");
+      }
 
       if (onSecretStored) {
         onSecretStored();
@@ -57,7 +68,7 @@ export default function SecretInput({
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to store secret. Please try again."
+          : "Failed to authenticate. Please try again."
       );
     } finally {
       setIsSubmitting(false);

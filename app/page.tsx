@@ -11,19 +11,28 @@ import { getNextUrlFromParams } from "@/utils/login-redirect";
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [hasStoredSecret, setHasStoredSecret] = useState(hasSecret());
+  const [hasStoredSecret, setHasStoredSecret] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (hasStoredSecret) {
-      const nextUrl = getNextUrlFromParams(searchParams);
-      const redirectUrl = nextUrl || "/config";
-      router.replace(redirectUrl);
-    }
-  }, [hasStoredSecret, searchParams, router]);
+    const checkAuth = async () => {
+      const authenticated = await hasSecret();
+      setHasStoredSecret(authenticated);
+      if (authenticated) {
+        const nextUrl = getNextUrlFromParams(searchParams);
+        const redirectUrl = nextUrl || "/config";
+        router.replace(redirectUrl);
+      }
+    };
+    checkAuth();
+  }, [searchParams, router]);
 
   const handleSecretStored = () => {
     setHasStoredSecret(true);
   };
+
+  if (hasStoredSecret === null) {
+    return null;
+  }
 
   const nextUrl = getNextUrlFromParams(searchParams) || "/config";
 

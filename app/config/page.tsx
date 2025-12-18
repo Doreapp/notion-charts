@@ -20,8 +20,7 @@ export default function ConfigPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [hasStoredSecret, setHasStoredSecret] = useState(hasSecret());
-  const [authFailed, setAuthFailed] = useState(false);
+  const [hasStoredSecret, setHasStoredSecret] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
 
   const [config, setConfig] = useState<ChartConfigType | null>(() => {
@@ -29,21 +28,27 @@ export default function ConfigPage() {
   });
 
   useEffect(() => {
-    if (!hasStoredSecret) {
-      const currentUrl = getCurrentUrlWithParams();
-      const loginUrl = buildLoginRedirectUrl(currentUrl);
-      router.replace(loginUrl);
-    }
-  }, [hasStoredSecret, router]);
+    const checkAuth = async () => {
+      const authenticated = await hasSecret();
+      setHasStoredSecret(authenticated);
+      if (!authenticated) {
+        const currentUrl = getCurrentUrlWithParams();
+        const loginUrl = buildLoginRedirectUrl(currentUrl);
+        router.replace(loginUrl);
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   const handleSecretStored = () => {
     setHasStoredSecret(true);
   };
 
-  const handleAuthError = () => {
-    clearSecret();
-    setHasStoredSecret(false);
-    setAuthFailed(true);
+  const handleAuthError = async () => {
+    await clearSecret();
+    const currentUrl = getCurrentUrlWithParams();
+    const loginUrl = buildLoginRedirectUrl(currentUrl);
+    router.replace(loginUrl);
   };
 
   const handleConfigChange = (newConfig: ChartConfigType) => {
@@ -71,7 +76,7 @@ export default function ConfigPage() {
     }
   };
 
-  if (!hasStoredSecret) {
+  if (hasStoredSecret === null || !hasStoredSecret) {
     return (
       <Box
         sx={{
@@ -87,7 +92,6 @@ export default function ConfigPage() {
       >
         <SecretInput
           onSecretStored={handleSecretStored}
-          authFailed={authFailed}
           nextUrl={getCurrentUrlWithParams()}
         />
       </Box>
