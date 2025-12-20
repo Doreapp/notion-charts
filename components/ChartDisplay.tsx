@@ -4,6 +4,7 @@ import { CircularProgress, Alert, Stack, Box, IconButton } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useEffect } from "react";
 import LineChart from "./charts/LineChart";
+import PieChart from "./charts/PieChart";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
 import useSWR from "swr";
 import { fetcher, UnauthorizedError } from "@/utils/fetcher";
@@ -156,11 +157,19 @@ export default function ChartWidget({
               flex: 1,
             }}
           >
-            <LineChart
-              data={chartData.data}
-              xAxisLabel={chartData.xAxisLabel}
-              yAxisLabel={chartData.yAxisLabel}
-            />
+            {config.chartType === "pie" ? (
+              <PieChart
+                data={chartData.data}
+                xAxisLabel={chartData.xAxisLabel}
+                yAxisLabel={chartData.yAxisLabel}
+              />
+            ) : (
+              <LineChart
+                data={chartData.data}
+                xAxisLabel={chartData.xAxisLabel}
+                yAxisLabel={chartData.yAxisLabel}
+              />
+            )}
           </Box>
         )}
       </Stack>

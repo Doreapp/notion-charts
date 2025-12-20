@@ -10,6 +10,7 @@ export function configToUrlParams(config: ChartConfig): URLSearchParams {
   }
 
   params.set("aggregation", config.aggregation);
+  params.set("chart_type", config.chartType);
 
   if (config.sortOrder) {
     params.set("sort_order", config.sortOrder);
@@ -37,6 +38,7 @@ export function urlParamsToConfig(
     | "count"
     | "sum"
     | "avg";
+  const chartType = (searchParams.get("chart_type") || "line") as "line" | "pie";
   const sortOrder = (searchParams.get("sort_order") || "asc") as "asc" | "desc";
   const accumulate = searchParams.get("accumulate") === "true";
   const filtersParam = searchParams.get("filters");
@@ -55,7 +57,7 @@ export function urlParamsToConfig(
       databaseId,
       xAxisFieldId,
       yAxisFieldId,
-      chartType: "line",
+      chartType,
       aggregation,
       sortOrder,
       accumulate,

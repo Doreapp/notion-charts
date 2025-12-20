@@ -39,6 +39,7 @@ interface FormValues {
   databaseId: string;
   xAxisFieldId: string;
   yAxisFieldId: string;
+  chartType: "line" | "pie";
   aggregation: "count" | "sum" | "avg";
   sortOrder: "asc" | "desc";
   accumulate: boolean;
@@ -71,6 +72,7 @@ export default function ChartConfig({
       databaseId: initialConfig?.databaseId || "",
       xAxisFieldId: initialConfig?.xAxisFieldId || "",
       yAxisFieldId: initialConfig?.yAxisFieldId || "",
+      chartType: initialConfig?.chartType || "line",
       aggregation: initialConfig?.aggregation || "count",
       sortOrder: initialConfig?.sortOrder || "asc",
       accumulate: initialConfig?.accumulate || false,
@@ -92,6 +94,7 @@ export default function ChartConfig({
         databaseId: initialConfig.databaseId,
         xAxisFieldId: initialConfig.xAxisFieldId,
         yAxisFieldId: initialConfig.yAxisFieldId || "",
+        chartType: initialConfig.chartType || "line",
         aggregation: initialConfig.aggregation,
         sortOrder: initialConfig.sortOrder || "asc",
         accumulate: initialConfig.accumulate || false,
@@ -107,6 +110,7 @@ export default function ChartConfig({
 
   const selectedDatabaseId = useWatch({ control, name: "databaseId" });
   const aggregation = useWatch({ control, name: "aggregation" });
+  const chartType = useWatch({ control, name: "chartType" });
 
   const properties = useMemo(() => {
     return (
@@ -156,7 +160,7 @@ export default function ChartConfig({
       xAxisFieldId: data.xAxisFieldId,
       yAxisFieldId:
         data.aggregation === "count" ? undefined : data.yAxisFieldId,
-      chartType: "line",
+      chartType: data.chartType,
       aggregation: data.aggregation,
       sortOrder: data.sortOrder,
       accumulate: data.accumulate,
@@ -195,6 +199,28 @@ export default function ChartConfig({
               name="databaseId"
               isLoading={isLoading}
               databases={databases ?? []}
+            />
+
+            <Controller
+              name="chartType"
+              control={control}
+              render={({ field }) => (
+                <FormControl
+                  fullWidth
+                  disabled={!selectedDatabaseId || isLoading}
+                >
+                  <InputLabel size="small">Chart Type</InputLabel>
+                  <Select
+                    {...field}
+                    label="Chart Type"
+                    disabled={!selectedDatabaseId || isLoading}
+                    size="small"
+                  >
+                    <MenuItem value="line">Line Chart</MenuItem>
+                    <MenuItem value="pie">Pie Chart</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
             />
 
             <PropertySelect
@@ -281,7 +307,9 @@ export default function ChartConfig({
                     <Checkbox
                       {...field}
                       checked={field.value}
-                      disabled={!selectedDatabaseId || isLoading}
+                      disabled={
+                        !selectedDatabaseId || isLoading || chartType === "pie"
+                      }
                     />
                   }
                   label="Accumulate values (cumulative sum)"
