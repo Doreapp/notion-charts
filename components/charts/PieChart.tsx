@@ -103,10 +103,9 @@ interface CustomTooltipProps {
     value: number;
     payload: ChartDataPoint;
   }>;
-  total: number;
 }
 
-function CustomTooltip({ active, payload, total }: CustomTooltipProps) {
+function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) {
     return null;
   }
@@ -114,7 +113,6 @@ function CustomTooltip({ active, payload, total }: CustomTooltipProps) {
   const data = payload[0];
   const value = data.value;
   const name = data.payload.name;
-  const percentage = ((value / total) * 100).toFixed(1);
 
   return (
     <div
@@ -130,9 +128,7 @@ function CustomTooltip({ active, payload, total }: CustomTooltipProps) {
       <div style={{ color: "rgba(255, 255, 255, 0.65)", marginBottom: "4px" }}>
         {name}
       </div>
-      <div style={{ color: "#FFFFFF" }}>
-        {value} ({percentage}%)
-      </div>
+      <div style={{ color: "#FFFFFF" }}>{value}</div>
     </div>
   );
 }
@@ -141,8 +137,6 @@ export default function PieChart({ data }: PieChartProps) {
   if (data.length === 0) {
     return null;
   }
-
-  const total = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -162,7 +156,7 @@ export default function PieChart({ data }: PieChartProps) {
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip content={<CustomTooltip total={total} />} />
+        <Tooltip content={<CustomTooltip />} />
       </RechartsPieChart>
     </ResponsiveContainer>
   );
