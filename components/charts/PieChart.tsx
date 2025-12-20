@@ -28,6 +28,74 @@ const COLORS = [
   "#F44336",
 ];
 
+const RADIAN = Math.PI / 180;
+
+interface LabelProps {
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  outerRadius?: number;
+  percent?: number;
+  name?: string;
+}
+
+function renderCustomLabel(props: LabelProps) {
+  const {
+    cx = 0,
+    cy = 0,
+    midAngle = 0,
+    outerRadius = 0,
+    percent = 0,
+    name = "",
+  } = props;
+
+  const radius = outerRadius + 20;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  const percentage = (percent * 100).toFixed(1);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="rgba(255, 255, 255, 0.65)"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize={12}
+    >
+      {`${name} ${percentage}%`}
+    </text>
+  );
+}
+
+interface LabelLineProps {
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  outerRadius?: number;
+}
+
+function renderLabelLine(props: LabelLineProps) {
+  const { cx = 0, cy = 0, midAngle = 0, outerRadius = 0 } = props;
+
+  const radius = outerRadius + 10;
+  const x1 = cx + outerRadius * Math.cos(-midAngle * RADIAN);
+  const y1 = cy + outerRadius * Math.sin(-midAngle * RADIAN);
+  const x2 = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y2 = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <line
+      x1={x1}
+      y1={y1}
+      x2={x2}
+      y2={y2}
+      stroke="rgba(255, 255, 255, 0.3)"
+      strokeWidth={1}
+    />
+  );
+}
+
 interface CustomTooltipProps {
   active?: boolean;
   payload?: Array<{
@@ -69,11 +137,7 @@ function CustomTooltip({ active, payload, total }: CustomTooltipProps) {
   );
 }
 
-export default function PieChart({
-  data,
-  xAxisLabel,
-  yAxisLabel,
-}: PieChartProps) {
+export default function PieChart({ data }: PieChartProps) {
   if (data.length === 0) {
     return null;
   }
@@ -84,19 +148,18 @@ export default function PieChart({
     <ResponsiveContainer width="100%" height="100%">
       <RechartsPieChart>
         <Pie
-          data={data}
+          data={data as unknown as Array<Record<string, unknown>>}
           cx="50%"
           cy="50%"
-          labelLine={false}
+          labelLine={renderLabelLine}
+          label={renderCustomLabel}
           outerRadius={80}
+          innerRadius={50}
           fill="#8884d8"
           dataKey="value"
         >
           {data.map((entry, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={COLORS[index % COLORS.length]}
-            />
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
         <Tooltip content={<CustomTooltip total={total} />} />
@@ -104,4 +167,3 @@ export default function PieChart({
     </ResponsiveContainer>
   );
 }
-
