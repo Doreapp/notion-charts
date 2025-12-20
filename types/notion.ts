@@ -103,7 +103,7 @@ export interface ChartConfig {
   databaseId: string;
   xAxisFieldId: string;
   yAxisFieldId?: string;
-  chartType: "line";
+  chartType: "line" | "pie";
   aggregation: "count" | "sum" | "avg";
   sortOrder?: "asc" | "desc";
   accumulate?: boolean;
