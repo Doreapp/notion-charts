@@ -1,10 +1,15 @@
-import { PageObjectResponse } from "@notionhq/client";
+import {
+  GetDataSourceResponse,
+  GetPageResponse,
+  PageObjectResponse,
+} from "@notionhq/client";
 import {
   normalizeDateToDay,
   isDateFieldType,
   fillMissingDays,
 } from "./date-utils";
 import { sortDataPoints } from "./sort-utils";
+import { notionClient } from "./client";
 
 export interface ChartDataPoint {
   name: string;
@@ -41,6 +46,10 @@ function extractXAxisValue(
       return property.created_time || null;
     case "last_edited_time":
       return property.last_edited_time || null;
+    case "url":
+      return property.url || null;
+    case "relation":
+      return property.relation?.[0]?.id || null;
     default:
       return null;
   }
@@ -183,4 +192,61 @@ export function processNotionDataForChart(
     xAxisLabel: "Value",
     yAxisLabel: getYAxisLabel(aggregation),
   };
+}
+
+export async function enrichRelationData(
+  data: ChartData,
+  xAxisFieldId: string,
+  database: GetDataSourceResponse
+): Promise<ChartData> {
+  const xAxisFieldProperty = database.properties[xAxisFieldId];
+  if (!xAxisFieldProperty || xAxisFieldProperty.type !== "relation") {
+    return data;
+  }
+
+  const referencedIds = new Set(data.data.map((point) => point.name));
+  const referencedPages = await Promise.all(
+    [...referencedIds].map(async (id) => {
+      const page = await notionClient.pages.retrieve({
+        page_id: id,
+      });
+      return page;
+    })
+  );
+  const idToPage = new Map(referencedPages.map((page) => [page.id, page]));
+
+  if (referencedPages.length === 0) {
+    return data;
+  }
+
+  const titleProperty = findTitleProperty(referencedPages[0]);
+  if (!titleProperty) {
+    return data;
+  }
+
+  const enrichedData = data.data.map((point) => {
+    const page = idToPage.get(point.name);
+    if (!page || !("properties" in page)) {
+      return point;
+    }
+    const title = page.properties[titleProperty];
+    if (!title || !("title" in title)) {
+      return point;
+    }
+    return {
+      ...point,
+      name: title.title?.[0]?.plain_text || point.name,
+    };
+  });
+
+  return { ...data, data: enrichedData };
+}
+
+function findTitleProperty(page: GetPageResponse): string | undefined {
+  if (!("properties" in page)) {
+    return undefined;
+  }
+  return Object.entries(page.properties).find(
+    ([, property]) => property.type === "title"
+  )?.[0];
 }

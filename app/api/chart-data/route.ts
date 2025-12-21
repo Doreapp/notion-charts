@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notionClient } from "@/lib/notion/client";
-import { processNotionDataForChart } from "@/lib/notion/chart-processor";
+import {
+  enrichRelationData,
+  processNotionDataForChart,
+} from "@/lib/notion/chart-processor";
 import { getAllDatabasePages } from "@/lib/notion/api/database-pages";
 import { withAuth } from "@/lib/auth/validate-secret";
 import type { FilterCondition } from "@/types/notion";
@@ -125,7 +128,7 @@ async function getChartDataHandler(request: NextRequest) {
     const allPages = await getAllDatabasePages(databaseId, -1, filters);
 
     const xAxisFieldType = xAxisFieldProperty.type;
-    const chartData = processNotionDataForChart(
+    let chartData = processNotionDataForChart(
       allPages,
       xAxisFieldId,
       xAxisFieldType,
@@ -134,6 +137,10 @@ async function getChartDataHandler(request: NextRequest) {
       sortOrder,
       accumulate
     );
+
+    if (xAxisFieldType === "relation") {
+      chartData = await enrichRelationData(chartData, xAxisFieldId, database);
+    }
 
     return NextResponse.json({
       data: chartData.data,
