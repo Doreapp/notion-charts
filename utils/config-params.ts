@@ -38,7 +38,9 @@ export function urlParamsToConfig(
     | "count"
     | "sum"
     | "avg";
-  const chartType = (searchParams.get("chart_type") || "line") as "line" | "pie";
+  const chartType = (searchParams.get("chart_type") || "line") as
+    | "line"
+    | "pie";
   const sortOrder = (searchParams.get("sort_order") || "asc") as "asc" | "desc";
   const accumulate = searchParams.get("accumulate") === "true";
   const filtersParam = searchParams.get("filters");
