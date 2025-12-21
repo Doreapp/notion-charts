@@ -44,10 +44,6 @@ export default function ConfigPage({
     checkAuth();
   }, [router]);
 
-  const handleSecretStored = () => {
-    setHasStoredSecret(true);
-  };
-
   const handleAuthError = async () => {
     await clearSecret();
     const currentUrl = getCurrentUrlWithParams();
@@ -81,25 +77,7 @@ export default function ConfigPage({
   };
 
   if (hasStoredSecret === null || !hasStoredSecret) {
-    return (
-      <Box
-        sx={{
-          width: "100%",
-          height: "100vh",
-          p: 2,
-          boxSizing: "border-box",
-          overflow: "auto",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <SecretInput
-          onSecretStored={handleSecretStored}
-          nextUrl={getCurrentUrlWithParams()}
-        />
-      </Box>
-    );
+    return null; // Will be redirected
   }
 
   return (

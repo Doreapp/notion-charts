@@ -2,11 +2,11 @@ import "./globals.css";
 import LoginPage from "./index-page";
 
 export default async function Page({
-  params,
+  searchParams,
 }: {
-  params: Promise<Record<string, string>>;
+  searchParams: Promise<Record<string, string>>;
 }) {
-  const searchParams = await params;
+  const params = await searchParams;
 
-  return <LoginPage params={searchParams} />;
+  return <LoginPage params={params} />;
 }
