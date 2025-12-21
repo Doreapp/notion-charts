@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useRef } from "react";
 import { useForm, Controller, FormProvider, useWatch } from "react-hook-form";
 import {
   FormControl,
@@ -144,6 +144,21 @@ export default function ChartConfig({
     // Only need to run when aggregation changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aggregation]);
+
+  const isFirstChartTypeMount = useRef(true);
+  useEffect(() => {
+    if (isFirstChartTypeMount.current) {
+      isFirstChartTypeMount.current = false;
+      return;
+    }
+    setValue("yAxisFieldId", "");
+    setValue("aggregation", "count");
+    setValue("sortOrder", "asc");
+    setValue("accumulate", false);
+    setFilters([]);
+    // Only need to run when chartType changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chartType]);
 
   const handleAddFilter = (condition: FilterCondition) => {
     setFilters([...filters, condition]);
