@@ -7,7 +7,6 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
 import ChartConfig from "@/components/ChartConfig";
 import ChartDisplay from "@/components/ChartDisplay";
-import SecretInput from "@/components/SecretInput";
 import { hasSecret, clearSecret } from "@/utils/secret-storage";
 import { urlParamsToConfig, configToUrlParams } from "@/utils/config-params";
 import {

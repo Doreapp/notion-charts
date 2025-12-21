@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Box } from "@mui/material";
 import ChartDisplay from "@/components/ChartDisplay";
-import SecretInput from "@/components/SecretInput";
 import { hasSecret, clearSecret } from "@/utils/secret-storage";
 import { urlParamsToConfig } from "@/utils/config-params";
 import {
