@@ -1,11 +1,11 @@
 import ChartPage from "./chart-page";
 
 export default async function Page({
-  params,
+  searchParams,
 }: {
-  params: Promise<Record<string, string>>;
+  searchParams: Promise<Record<string, string>>;
 }) {
-  const searchParams = await params;
+  const params = await searchParams;
 
-  return <ChartPage params={searchParams} />;
+  return <ChartPage params={params} />;
 }

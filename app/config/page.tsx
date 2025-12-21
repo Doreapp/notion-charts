@@ -1,11 +1,11 @@
 import ConfigPage from "./config-page";
 
 export default async function Page({
-  params,
+  searchParams,
 }: {
-  params: Promise<Record<string, string>>;
+  searchParams: Promise<Record<string, string>>;
 }) {
-  const searchParams = await params;
+  const params = await searchParams;
 
-  return <ConfigPage params={searchParams} />;
+  return <ConfigPage params={params} />;
 }
