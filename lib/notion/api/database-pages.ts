@@ -3,11 +3,17 @@ import { notionClient } from "../client";
 import type { FilterCondition } from "@/types/notion";
 import { convertFiltersToNotionFilter } from "../filter-converter";
 
+export type GetAllDatabasePagesOptions = {
+  limit?: number;
+  filters?: FilterCondition[];
+  filterProperties?: string[];
+};
+
 export async function getAllDatabasePages(
   databaseId: string,
-  limit: number = -1,
-  filters?: FilterCondition[]
+  options: GetAllDatabasePagesOptions = {}
 ) {
+  const { limit = -1, filters = [], filterProperties = [] } = options;
   let allPages: Array<PageObjectResponse> = [];
   let hasMore = true;
   let startCursor: string | undefined = undefined;
@@ -23,6 +29,7 @@ export async function getAllDatabasePages(
       start_cursor: startCursor,
       page_size: 100,
       filter: notionFilter,
+      filter_properties: filterProperties,
     };
 
     const response = await notionClient.dataSources.query(queryParams);
