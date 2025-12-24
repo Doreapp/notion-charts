@@ -6,6 +6,7 @@ import type {
   StatusFilterCondition,
   DateFilterCondition,
   CheckboxFilterCondition,
+  RelationFilterCondition,
 } from "@/types/notion";
 import { QueryDataSourceParameters } from "@notionhq/client";
 
@@ -97,46 +98,44 @@ function convertNumberFilter(
   } as NotionFilterProperty;
 }
 
+function convertRelationFilter(
+  condition: RelationFilterCondition
+): NotionFilterProperty {
+  const filter = convertSingleChoiceFilter(condition);
+  if (!("relation" in filter) || typeof filter.relation == "string") {
+    // Just for typescript
+    return filter as NotionFilterProperty;
+  }
+  return {
+    ...filter,
+    relation: {
+      contains: filter.relation.equals,
+      does_not_contain: filter.relation.does_not_equal,
+      is_empty: filter.relation.is_empty,
+      is_not_empty: filter.relation.is_not_empty,
+    },
+  } as NotionFilterProperty;
+}
+
 function convertSelectFilter(
   condition: SelectFilterCondition
 ): NotionFilterProperty {
-  const selectCondition: {
-    equals?: string;
-    does_not_equal?: string;
-    is_empty?: true;
-    is_not_empty?: true;
-  } = {};
-
-  switch (condition.operator) {
-    case "equals":
-      if (condition.value !== undefined) {
-        selectCondition.equals = condition.value;
-      }
-      break;
-    case "does_not_equal":
-      if (condition.value !== undefined) {
-        selectCondition.does_not_equal = condition.value;
-      }
-      break;
-    case "is_empty":
-      selectCondition.is_empty = true;
-      break;
-    case "is_not_empty":
-      selectCondition.is_not_empty = true;
-      break;
-  }
-
-  return {
-    property: condition.propertyId,
-    type: condition.propertyType,
-    select: selectCondition,
-  } as NotionFilterProperty;
+  return convertSingleChoiceFilter(condition) as NotionFilterProperty;
 }
 
 function convertStatusFilter(
   condition: StatusFilterCondition
 ): NotionFilterProperty {
-  const statusCondition: {
+  return convertSingleChoiceFilter(condition) as NotionFilterProperty;
+}
+
+function convertSingleChoiceFilter(
+  condition:
+    | SelectFilterCondition
+    | RelationFilterCondition
+    | StatusFilterCondition
+) {
+  const choiceCondition: {
     equals?: string;
     does_not_equal?: string;
     is_empty?: true;
@@ -146,27 +145,27 @@ function convertStatusFilter(
   switch (condition.operator) {
     case "equals":
       if (condition.value !== undefined) {
-        statusCondition.equals = condition.value;
+        choiceCondition.equals = condition.value;
       }
       break;
     case "does_not_equal":
       if (condition.value !== undefined) {
-        statusCondition.does_not_equal = condition.value;
+        choiceCondition.does_not_equal = condition.value;
       }
       break;
     case "is_empty":
-      statusCondition.is_empty = true;
+      choiceCondition.is_empty = true;
       break;
     case "is_not_empty":
-      statusCondition.is_not_empty = true;
+      choiceCondition.is_not_empty = true;
       break;
   }
 
   return {
     property: condition.propertyId,
     type: condition.propertyType,
-    status: statusCondition,
-  } as NotionFilterProperty;
+    [condition.propertyType]: choiceCondition,
+  };
 }
 
 function convertDateFilter(
@@ -233,6 +232,8 @@ function convertFilterConditionToNotionFilter(
       return convertNumberFilter(condition as NumberFilterCondition);
     case "select":
       return convertSelectFilter(condition as SelectFilterCondition);
+    case "relation":
+      return convertRelationFilter(condition as RelationFilterCondition);
     case "status":
       return convertStatusFilter(condition as StatusFilterCondition);
     case "date":
