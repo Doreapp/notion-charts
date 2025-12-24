@@ -80,10 +80,12 @@ function getOperatorsForType(
   switch (type) {
     case "rich_text":
     case "title":
+    case "url":
       return TEXT_OPERATORS;
     case "number":
       return NUMBER_OPERATORS;
     case "select":
+    case "relation":
       return SELECT_OPERATORS;
     case "status":
       return STATUS_OPERATORS;
@@ -132,6 +134,8 @@ export default function FilterConditionForm({
       "created_time",
       "last_edited_time",
       "checkbox",
+      "url",
+      "relation",
     ];
     return properties.filter((p) => supportedTypes.includes(p.type));
   }, [properties]);
@@ -178,7 +182,8 @@ export default function FilterConditionForm({
     if (!selectedProperty || !operator || !needsValue(operator)) return false;
     return (
       (selectedProperty.type === "select" ||
-        selectedProperty.type === "status") &&
+        selectedProperty.type === "status" ||
+        selectedProperty.type === "relation") &&
       (operator === "equals" || operator === "does_not_equal") &&
       selectedProperty.options &&
       selectedProperty.options.length > 0
@@ -284,7 +289,7 @@ export default function FilterConditionForm({
                     onChange={(e) => setValue(e.target.value)}
                   >
                     {selectedProperty.options?.map((option) => (
-                      <MenuItem key={option.id} value={option.name}>
+                      <MenuItem key={option.id} value={option.id}>
                         {option.name}
                       </MenuItem>
                     ))}
