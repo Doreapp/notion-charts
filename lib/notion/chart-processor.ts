@@ -10,6 +10,7 @@ import {
 } from "./date-utils";
 import { sortDataPoints } from "./sort-utils";
 import { notionClient } from "./client";
+import { findTitleProperty } from "./properties";
 
 export interface ChartDataPoint {
   name: string;
@@ -240,13 +241,4 @@ export async function enrichRelationData(
   });
 
   return { ...data, data: enrichedData };
-}
-
-function findTitleProperty(page: GetPageResponse): string | undefined {
-  if (!("properties" in page)) {
-    return undefined;
-  }
-  return Object.entries(page.properties).find(
-    ([, property]) => property.type === "title"
-  )?.[0];
 }
