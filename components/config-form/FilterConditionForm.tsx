@@ -256,11 +256,9 @@ export default function FilterConditionForm({
             )}
           </Grid>
 
-          <Grid size={4}>
-            {selectedProperty &&
-              operator &&
-              needsValue(operator) &&
-              selectedProperty.type === "checkbox" && (
+          {selectedProperty && operator && needsValue(operator) && (
+            <Grid size={4}>
+              {selectedProperty.type === "checkbox" ? (
                 <FormControl fullWidth size="small">
                   <InputLabel>Value</InputLabel>
                   <Select
@@ -274,13 +272,7 @@ export default function FilterConditionForm({
                     <MenuItem value="false">False</MenuItem>
                   </Select>
                 </FormControl>
-              )}
-
-            {selectedProperty &&
-              operator &&
-              needsValue(operator) &&
-              selectedProperty.type !== "checkbox" &&
-              shouldShowDropdown && (
+              ) : shouldShowDropdown ? (
                 <FormControl fullWidth size="small">
                   <InputLabel>Value</InputLabel>
                   <Select
@@ -295,13 +287,7 @@ export default function FilterConditionForm({
                     ))}
                   </Select>
                 </FormControl>
-              )}
-
-            {selectedProperty &&
-              operator &&
-              needsValue(operator) &&
-              selectedProperty.type !== "checkbox" &&
-              !shouldShowDropdown && (
+              ) : (
                 <TextField
                   fullWidth
                   size="small"
@@ -317,7 +303,8 @@ export default function FilterConditionForm({
                   onChange={(e) => setValue(e.target.value)}
                 />
               )}
-          </Grid>
+            </Grid>
+          )}
         </Grid>
 
         <Stack direction="row" gap={1} justifyContent="flex-end">
