@@ -32,7 +32,9 @@ async function enrichRelationProperty(property: EnrichedRelationProperty) {
 
   let pages: PageObjectResponse[] = [];
   try {
-    pages = await getAllDatabasePages(relation.data_source_id);
+    pages = await getAllDatabasePages(relation.data_source_id, {
+      filterProperties: ["title"],
+    });
   } catch (error) {
     console.warn("Error enriching relation property", error);
     return;
