@@ -78,7 +78,7 @@ export default function ChartConfig({
       accumulate: initialConfig?.accumulate || false,
       filters: initialConfig?.filters || [],
     },
-    mode: "onChange",
+    mode: "onBlur",
   });
   const {
     control,
@@ -86,6 +86,8 @@ export default function ChartConfig({
     setValue,
     formState: { isValid },
     reset,
+    watch,
+    getValues,
   } = methods;
 
   useEffect(() => {
@@ -121,44 +123,33 @@ export default function ChartConfig({
   const numericProperties = useMemo(() => {
     return properties.filter((prop) => prop.type === "number");
   }, [properties]);
+
   useEffect(() => {
-    if (selectedDatabaseId && databases) {
-      if (
-        !initialConfig?.xAxisFieldId ||
-        !databases
-          ?.find((db) => db.id === selectedDatabaseId)
-          ?.properties?.find((prop) => prop.id === initialConfig.xAxisFieldId)
-      ) {
-        setValue("xAxisFieldId", "");
+    const subscription = watch((value, { name }) => {
+      if (name === "databaseId" && databases) {
+        const xAxisFieldId = getValues("xAxisFieldId");
+        const currentDatabase = databases.find(
+          (db) => db.id === value.databaseId
+        );
+        if (
+          !currentDatabase?.properties?.find((prop) => prop.id === xAxisFieldId)
+        ) {
+          setValue("xAxisFieldId", "");
+        }
+        setValue("yAxisFieldId", "");
+      } else if (name === "aggregation" && value.aggregation === "count") {
+        setValue("yAxisFieldId", "");
+      } else if (name === "chartType") {
+        setValue("yAxisFieldId", "");
+        setValue("aggregation", "count");
+        setValue("sortOrder", "asc");
+        setValue("accumulate", false);
+        setFilters([]);
       }
-      setValue("yAxisFieldId", "");
-    }
-    // Only need to run when selectedDatabaseId changes
+    });
+    return () => subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDatabaseId]);
-
-  useEffect(() => {
-    if (aggregation === "count") {
-      setValue("yAxisFieldId", "");
-    }
-    // Only need to run when aggregation changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aggregation]);
-
-  const isFirstChartTypeMount = useRef(true);
-  useEffect(() => {
-    if (isFirstChartTypeMount.current) {
-      isFirstChartTypeMount.current = false;
-      return;
-    }
-    setValue("yAxisFieldId", "");
-    setValue("aggregation", "count");
-    setValue("sortOrder", "asc");
-    setValue("accumulate", false);
-    setFilters([]);
-    // Only need to run when chartType changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartType]);
+  }, [watch, databases]);
 
   const handleAddFilter = (condition: FilterCondition) => {
     setFilters([...filters, condition]);
