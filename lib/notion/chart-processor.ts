@@ -1,8 +1,4 @@
-import {
-  GetDataSourceResponse,
-  GetPageResponse,
-  PageObjectResponse,
-} from "@notionhq/client";
+import { GetDataSourceResponse, PageObjectResponse } from "@notionhq/client";
 import {
   normalizeDateToDay,
   isDateFieldType,
