@@ -21,6 +21,7 @@ import type {
   StatusFilterOperator,
   DateFilterOperator,
   CheckboxFilterOperator,
+  RelationFilterOperator,
 } from "@/types/notion";
 
 interface FilterConditionFormProps {
@@ -45,6 +46,13 @@ const NUMBER_OPERATORS: NumberFilterOperator[] = [
 ];
 
 const SELECT_OPERATORS: SelectFilterOperator[] = [
+  "equals",
+  "does_not_equal",
+  "is_empty",
+  "is_not_empty",
+];
+
+const RELATION_OPERATORS: RelationFilterOperator[] = [
   "equals",
   "does_not_equal",
   "is_empty",
@@ -85,8 +93,9 @@ function getOperatorsForType(
     case "number":
       return NUMBER_OPERATORS;
     case "select":
-    case "relation":
       return SELECT_OPERATORS;
+    case "relation":
+      return RELATION_OPERATORS;
     case "status":
       return STATUS_OPERATORS;
     case "date":

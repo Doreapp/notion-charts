@@ -3,7 +3,7 @@ import { notionClient } from "../client";
 import type { FilterCondition } from "@/types/notion";
 import { convertFiltersToNotionFilter } from "../filter-converter";
 
-export type GetAllDatabasePagesOptions = {
+type GetAllDatabasePagesOptions = {
   limit?: number;
   filters?: FilterCondition[];
   filterProperties?: string[];
