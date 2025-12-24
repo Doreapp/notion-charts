@@ -15,32 +15,19 @@ export function parseDatabase(
         type: property.type,
       };
 
-      if (
-        property.type === "select" &&
-        "select" in property &&
-        property.select
-      ) {
-        return {
-          ...baseProperty,
-          options: property.select.options?.map((option) => ({
-            id: option.id,
-            name: option.name,
-          })),
-        };
-      }
-
-      if (
-        property.type === "status" &&
-        "status" in property &&
-        property.status
-      ) {
-        return {
-          ...baseProperty,
-          options: property.status.options?.map((option) => ({
-            id: option.id,
-            name: option.name,
-          })),
-        };
+      const typesToCheck = ["select", "status", "relation"] as const;
+      for (const type of typesToCheck) {
+        if (property.type === type && type in property) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const options = (property as any)[type].options;
+          return {
+            ...baseProperty,
+            options: options?.map((option: { id: string; name: string }) => ({
+              id: option.id,
+              name: option.name,
+            })),
+          };
+        }
       }
 
       return baseProperty;
