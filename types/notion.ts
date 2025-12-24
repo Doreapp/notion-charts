@@ -41,6 +41,11 @@ export type StatusFilterOperator =
   | "does_not_equal"
   | "is_empty"
   | "is_not_empty";
+export type RelationFilterOperator =
+  | "equals"
+  | "does_not_equal"
+  | "is_empty"
+  | "is_not_empty";
 export type DateFilterOperator =
   | "equals"
   | "before"
@@ -77,6 +82,13 @@ export interface StatusFilterCondition {
   value?: string;
 }
 
+export interface RelationFilterCondition {
+  propertyId: string;
+  propertyType: "relation";
+  operator: RelationFilterOperator;
+  value?: string;
+}
+
 export interface DateFilterCondition {
   propertyId: string;
   propertyType: "date" | "created_time" | "last_edited_time";
@@ -96,6 +108,7 @@ export type FilterCondition =
   | NumberFilterCondition
   | SelectFilterCondition
   | StatusFilterCondition
+  | RelationFilterCondition
   | DateFilterCondition
   | CheckboxFilterCondition;
 
