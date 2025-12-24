@@ -125,7 +125,11 @@ async function getChartDataHandler(request: NextRequest) {
       }
     }
 
-    const allPages = await getAllDatabasePages(databaseId, -1, filters);
+    const filterProperties = [xAxisFieldId, yAxisFieldId ?? ""].filter(Boolean);
+    const allPages = await getAllDatabasePages(databaseId, {
+      filters,
+      filterProperties,
+    });
 
     const xAxisFieldType = xAxisFieldProperty.type;
     let chartData = processNotionDataForChart(
