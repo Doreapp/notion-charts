@@ -47,6 +47,16 @@ function formatFilterValue(
       valueStr = condition.value.toString();
     } else if (condition.value) {
       valueStr = condition.value;
+      if (
+        property?.type === "relation" ||
+        property?.type === "status" ||
+        property?.type === "select"
+      ) {
+        const value = property.options?.find((o) => o.id === condition.value);
+        if (value && "name" in value) {
+          valueStr = value.name;
+        }
+      }
     }
   }
 
