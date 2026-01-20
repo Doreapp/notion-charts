@@ -122,6 +122,11 @@ async function getChartDataHandler(request: NextRequest) {
             { status: 400 }
           );
         }
+        if (filter.propertyType === "status" && property.type === "status") {
+          filter.value =
+            property.status?.options?.find((o) => o.id === filter.value)
+              ?.name ?? filter.value;
+        }
       }
     }
 
