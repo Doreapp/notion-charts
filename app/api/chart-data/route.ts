@@ -7,6 +7,7 @@ import {
 import { getAllDatabasePages } from "@/lib/notion/api/database-pages";
 import { withAuth } from "@/lib/auth/validate-secret";
 import type { FilterCondition } from "@/types/notion";
+import { sanitizeFilters } from "@/lib/notion/filter-sanatize";
 
 /**
  * API route to fetch chart data from a Notion database.
@@ -105,34 +106,17 @@ async function getChartDataHandler(request: NextRequest) {
       }
     }
 
-    if (filters && filters.length > 0) {
-      for (const filter of filters) {
-        const property = database.properties[filter.propertyId];
-        if (!property) {
-          return NextResponse.json(
-            {
-              error: `Filter property ${filter.propertyId} not found in database`,
-            },
-            { status: 400 }
-          );
-        }
-        if (property.type !== filter.propertyType) {
-          return NextResponse.json(
-            { error: `Filter property type mismatch for ${filter.propertyId}` },
-            { status: 400 }
-          );
-        }
-        if (filter.propertyType === "status" && property.type === "status") {
-          filter.value =
-            property.status?.options?.find((o) => o.id === filter.value)
-              ?.name ?? filter.value;
-        }
-      }
+    const { filters: sanatizedFilters, error } = sanitizeFilters(
+      filters,
+      database
+    );
+    if (error) {
+      return NextResponse.json({ error }, { status: 400 });
     }
 
     const filterProperties = [xAxisFieldId, yAxisFieldId ?? ""].filter(Boolean);
     const allPages = await getAllDatabasePages(databaseId, {
-      filters,
+      filters: sanatizedFilters,
       filterProperties,
     });
 
