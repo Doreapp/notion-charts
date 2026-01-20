@@ -23,7 +23,7 @@ export default function ConfigPage({
   const searchParams = new URLSearchParams(params);
   const router = useRouter();
 
-  const [hasStoredSecret, setHasStoredSecret] = useState<boolean | null>(null);
+  const isAuthenticated = useMemo(() => hasSecret(), []);
   const [copied, setCopied] = useState(false);
 
   const [config, setConfig] = useState<ChartConfigType | null>(() => {
@@ -31,17 +31,12 @@ export default function ConfigPage({
   });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const authenticated = await hasSecret();
-      setHasStoredSecret(authenticated);
-      if (!authenticated) {
-        const currentUrl = getCurrentUrlWithParams();
-        const loginUrl = buildLoginRedirectUrl(currentUrl);
-        router.replace(loginUrl);
-      }
-    };
-    checkAuth();
-  }, [router]);
+    if (!isAuthenticated) {
+      const currentUrl = getCurrentUrlWithParams();
+      const loginUrl = buildLoginRedirectUrl(currentUrl);
+      router.replace(loginUrl);
+    }
+  }, [isAuthenticated, router]);
 
   const handleAuthError = async () => {
     await clearSecret();
@@ -75,7 +70,7 @@ export default function ConfigPage({
     }
   };
 
-  if (hasStoredSecret === null || !hasStoredSecret) {
+  if (!isAuthenticated) {
     return null; // Will be redirected
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Box } from "@mui/material";
 import ChartDisplay from "@/components/ChartDisplay";
 import { hasSecret, clearSecret } from "@/utils/secret-storage";
@@ -18,22 +18,17 @@ export default function ChartPage({
 }) {
   const router = useRouter();
 
-  const [hasStoredSecret, setHasStoredSecret] = useState<boolean | null>(null);
+  const isAuthenticated = useMemo(() => hasSecret(), []);
 
   const config = urlParamsToConfig(new URLSearchParams(params));
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const authenticated = await hasSecret();
-      setHasStoredSecret(authenticated);
-      if (!authenticated) {
-        const currentUrl = getCurrentUrlWithParams();
-        const loginUrl = buildLoginRedirectUrl(currentUrl);
-        router.replace(loginUrl);
-      }
-    };
-    checkAuth();
-  }, [router]);
+    if (!isAuthenticated) {
+      const currentUrl = getCurrentUrlWithParams();
+      const loginUrl = buildLoginRedirectUrl(currentUrl);
+      router.replace(loginUrl);
+    }
+  }, [isAuthenticated, router]);
 
   const handleAuthError = async () => {
     await clearSecret();
@@ -42,7 +37,7 @@ export default function ChartPage({
     router.replace(loginUrl);
   };
 
-  if (hasStoredSecret === null || !hasStoredSecret) {
+  if (!isAuthenticated) {
     return null; // Will be redirected
   }
 

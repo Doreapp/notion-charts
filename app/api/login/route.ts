@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  API_SECRET_ENV,
-  COOKIE_NAME,
-  validateOrigin,
-} from "@/lib/auth/validate-secret";
+import { API_SECRET_ENV, validateOrigin } from "@/lib/auth/validate-secret";
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,16 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = NextResponse.json({ success: true });
-
-    response.cookies.set(COOKIE_NAME, secret, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-    });
-
-    return response;
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error in login route:", error);
     return NextResponse.json(

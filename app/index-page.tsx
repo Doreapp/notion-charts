@@ -14,20 +14,17 @@ export default function LoginPage({
   params: Record<string, string>;
 }) {
   const router = useRouter();
-  const [hasStoredSecret, setHasStoredSecret] = useState<boolean | null>(null);
+  const [hasStoredSecret, setHasStoredSecret] = useState<boolean | null>(() =>
+    hasSecret()
+  );
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const authenticated = await hasSecret();
-      setHasStoredSecret(authenticated);
-      if (authenticated) {
-        const nextUrl = getNextUrlFromParams(new URLSearchParams(params));
-        const redirectUrl = nextUrl || "/config";
-        router.replace(redirectUrl);
-      }
-    };
-    checkAuth();
-  }, [params, router]);
+    if (hasStoredSecret) {
+      const nextUrl = getNextUrlFromParams(new URLSearchParams(params));
+      const redirectUrl = nextUrl || "/config";
+      router.replace(redirectUrl);
+    }
+  }, [hasStoredSecret, params, router]);
 
   const handleSecretStored = () => {
     setHasStoredSecret(true);

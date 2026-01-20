@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const API_SECRET_ENV = "API_SECRET";
-export const COOKIE_NAME = "api_secret";
 
 function getRequestOrigin(request: NextRequest): string | null {
   const origin = request.headers.get("origin");
@@ -67,13 +66,21 @@ function validateApiSecret(request: NextRequest): boolean {
     return true;
   }
 
-  const cookieSecret = request.cookies.get(COOKIE_NAME)?.value;
+  const authHeader = request.headers.get("authorization");
 
-  if (!cookieSecret) {
+  if (!authHeader) {
     return false;
   }
 
-  return cookieSecret === apiSecret;
+  const bearerToken = authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null;
+
+  if (!bearerToken) {
+    return false;
+  }
+
+  return bearerToken === apiSecret;
 }
 
 function createUnauthorizedResponse(message?: string): NextResponse {

@@ -1,39 +1,48 @@
-let authCheckCache: { value: boolean; timestamp: number } | null = null;
-const AUTH_CHECK_CACHE_DURATION = 5000;
+const STORAGE_KEY = "api_secret";
 
-export async function hasSecret(): Promise<boolean> {
+export function getSecretFromStorage(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch (error) {
+    console.error("Error reading secret from storage:", error);
+    return null;
+  }
+}
+
+export function setSecretInStorage(secret: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    localStorage.setItem(STORAGE_KEY, secret);
+  } catch (error) {
+    console.error("Error storing secret:", error);
+  }
+}
+
+function removeSecretFromStorage(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (error) {
+    console.error("Error removing secret from storage:", error);
+  }
+}
+
+export function hasSecret(): boolean {
   if (typeof window === "undefined") {
     return false;
   }
 
-  if (
-    authCheckCache &&
-    Date.now() - authCheckCache.timestamp < AUTH_CHECK_CACHE_DURATION
-  ) {
-    return authCheckCache.value;
-  }
-
-  try {
-    const response = await fetch("/api/auth/check", {
-      method: "GET",
-      credentials: "include",
-    });
-
-    const isAuthenticated = response.ok;
-    authCheckCache = {
-      value: isAuthenticated,
-      timestamp: Date.now(),
-    };
-
-    return isAuthenticated;
-  } catch (error) {
-    console.error("Error checking auth status:", error);
-    authCheckCache = {
-      value: false,
-      timestamp: Date.now(),
-    };
-    return false;
-  }
+  return getSecretFromStorage() !== null;
 }
 
 export async function clearSecret(): Promise<void> {
@@ -41,13 +50,5 @@ export async function clearSecret(): Promise<void> {
     return;
   }
 
-  try {
-    await fetch("/api/logout", {
-      method: "POST",
-      credentials: "include",
-    });
-    authCheckCache = null;
-  } catch (error) {
-    console.error("Error clearing secret:", error);
-  }
+  removeSecretFromStorage();
 }
