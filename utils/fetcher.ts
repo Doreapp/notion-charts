@@ -1,3 +1,5 @@
+import { getSecretFromStorage } from "./secret-storage";
+
 export class UnauthorizedError extends Error {
   constructor(message: string = "Unauthorized") {
     super(message);
@@ -8,9 +10,16 @@ export class UnauthorizedError extends Error {
 export const fetcher = <T>(...args: Parameters<typeof fetch>): Promise<T> => {
   const [url, init] = args;
 
+  const headers = new Headers(init?.headers);
+  const secret = getSecretFromStorage();
+
+  if (secret) {
+    headers.set("Authorization", `Bearer ${secret}`);
+  }
+
   const modifiedInit: RequestInit = {
     ...init,
-    credentials: "include",
+    headers,
   };
 
   return fetch(url, modifiedInit).then(async (res) => {
