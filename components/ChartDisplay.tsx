@@ -1,8 +1,16 @@
 "use client";
 
-import { CircularProgress, Alert, Stack, Box, IconButton } from "@mui/material";
+import {
+  CircularProgress,
+  Alert,
+  Stack,
+  Box,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { useEffect } from "react";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { useEffect, useState } from "react";
 import LineChart from "./charts/LineChart";
 import PieChart from "./charts/PieChart";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
@@ -57,10 +65,17 @@ export default function ChartWidget({
     data: chartData,
     isLoading,
     error,
+    mutate,
   } = useSWR<ChartDataResponse>(
     `/api/chart-data?${queryParams.toString()}`,
     fetcher
   );
+
+  const [reloading, setReloading] = useState(false);
+  const handleReload = () => {
+    setReloading(true);
+    mutate(undefined).then(() => setReloading(false));
+  };
 
   useEffect(() => {
     if (error instanceof UnauthorizedError && onAuthError) {
@@ -117,19 +132,28 @@ export default function ChartWidget({
             top: 4,
             left: 4,
             zIndex: 10,
+            display: "flex",
+            flexDirection: "column",
+            gap: 0.5,
           }}
         >
-          <IconButton
+          <IconButtonWithTooltip
+            tooltip="Open configuration"
             onClick={handleOpenConfig}
-            size="small"
-            sx={{
-              "&:hover": {
-                backgroundColor: "action.hover",
-              },
-            }}
           >
             <SettingsIcon fontSize="small" />
-          </IconButton>
+          </IconButtonWithTooltip>
+          <IconButtonWithTooltip
+            tooltip="Reload chart"
+            onClick={handleReload}
+            disabled={reloading}
+          >
+            {reloading ? (
+              <CircularProgress size={16} />
+            ) : (
+              <RefreshIcon fontSize="small" />
+            )}
+          </IconButtonWithTooltip>
         </Box>
       )}
       <Stack
@@ -174,5 +198,32 @@ export default function ChartWidget({
         )}
       </Stack>
     </Box>
+  );
+}
+
+function IconButtonWithTooltip({
+  tooltip,
+  children,
+  ...props
+}: {
+  tooltip: string;
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Tooltip title={tooltip}>
+      <IconButton
+        {...props}
+        size="small"
+        sx={{
+          "&:hover": {
+            backgroundColor: "action.hover",
+          },
+        }}
+      >
+        {children}
+      </IconButton>
+    </Tooltip>
   );
 }
