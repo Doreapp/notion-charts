@@ -1,4 +1,8 @@
-import type { ChartConfig, FilterCondition, SeriesConfig } from "@/types/notion";
+import type {
+  ChartConfig,
+  FilterCondition,
+  SeriesConfig,
+} from "@/types/notion";
 
 export function configToUrlParams(config: ChartConfig): URLSearchParams {
   const params = new URLSearchParams();

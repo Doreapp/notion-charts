@@ -282,8 +282,15 @@ export function processNotionDataForMultiSeriesChart(
       config.aggregation,
       config.yAxisFieldId
     );
-    const aggregatedData = aggregateGroupedData(groupedData, config.aggregation);
-    const sortedData = sortDataPoints(aggregatedData, xAxisFieldType, sortOrder);
+    const aggregatedData = aggregateGroupedData(
+      groupedData,
+      config.aggregation
+    );
+    const sortedData = sortDataPoints(
+      aggregatedData,
+      xAxisFieldType,
+      sortOrder
+    );
     allSeriesData.push(sortedData);
   }
 

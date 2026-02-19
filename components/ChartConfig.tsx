@@ -62,9 +62,7 @@ interface FormValues {
   series: SeriesFormValues[];
 }
 
-function getInitialSeries(
-  initialConfig?: ChartConfig
-): SeriesFormValues[] {
+function getInitialSeries(initialConfig?: ChartConfig): SeriesFormValues[] {
   if (initialConfig?.series && initialConfig.series.length > 0) {
     return initialConfig.series.map((s) => ({
       aggregation: s.aggregation,
@@ -339,10 +337,7 @@ export default function ChartConfig({
                             onChange={(e) => {
                               field.onChange(e);
                               if (e.target.value === "count") {
-                                setValue(
-                                  `series.${index}.yAxisFieldId`,
-                                  ""
-                                );
+                                setValue(`series.${index}.yAxisFieldId`, "");
                               }
                             }}
                           >
