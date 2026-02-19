@@ -46,7 +46,12 @@ export default function LineChart({
     <ResponsiveContainer width="100%" height="100%">
       <RechartsLineChart
         data={data}
-        margin={{ top: 10, right: 10, left: 10, bottom: isMultiSeries ? 30 : 10 }}
+        margin={{
+          top: 10,
+          right: 10,
+          left: 10,
+          bottom: isMultiSeries ? 30 : 10,
+        }}
       >
         <CartesianGrid
           strokeDasharray="3 3"

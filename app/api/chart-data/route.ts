@@ -91,7 +91,9 @@ async function getChartDataHandler(request: NextRequest) {
       for (const [i, config] of seriesConfigs.entries()) {
         if (!["count", "sum", "avg"].includes(config.aggregation)) {
           return NextResponse.json(
-            { error: `Series ${i}: invalid aggregation type '${config.aggregation}'` },
+            {
+              error: `Series ${i}: invalid aggregation type '${config.aggregation}'`,
+            },
             { status: 400 }
           );
         }
@@ -100,7 +102,9 @@ async function getChartDataHandler(request: NextRequest) {
           !config.yAxisFieldId
         ) {
           return NextResponse.json(
-            { error: `Series ${i}: Y axis field is required for aggregation type '${config.aggregation}'` },
+            {
+              error: `Series ${i}: Y axis field is required for aggregation type '${config.aggregation}'`,
+            },
             { status: 400 }
           );
         }
@@ -108,7 +112,9 @@ async function getChartDataHandler(request: NextRequest) {
           const yProp = database.properties[config.yAxisFieldId];
           if (!yProp) {
             return NextResponse.json(
-              { error: `Series ${i}: Y axis field '${config.yAxisFieldId}' not found` },
+              {
+                error: `Series ${i}: Y axis field '${config.yAxisFieldId}' not found`,
+              },
               { status: 404 }
             );
           }
@@ -117,7 +123,9 @@ async function getChartDataHandler(request: NextRequest) {
             yProp.type !== "number"
           ) {
             return NextResponse.json(
-              { error: `Series ${i}: Y axis field must be of type 'number' for '${config.aggregation}'` },
+              {
+                error: `Series ${i}: Y axis field must be of type 'number' for '${config.aggregation}'`,
+              },
               { status: 400 }
             );
           }
