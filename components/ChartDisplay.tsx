@@ -14,19 +14,16 @@ import { useEffect, useState } from "react";
 import LineChart from "./charts/LineChart";
 import PieChart from "./charts/PieChart";
 import type { ChartConfig as ChartConfigType } from "@/types/notion";
+import type { ChartDataPoint } from "@/lib/notion/chart-processor";
 import useSWR from "swr";
 import { fetcher, UnauthorizedError } from "@/utils/fetcher";
 import { configToUrlParams } from "@/utils/config-params";
 
-interface ChartDataPoint {
-  name: string;
-  value: number;
-}
-
 interface ChartDataResponse {
-  data: ChartDataPoint[];
+  data: Record<string, string | number>[];
   xAxisLabel?: string;
   yAxisLabel?: string;
+  seriesLabels?: string[];
   fieldType?: string;
   totalPages?: number;
 }
@@ -59,6 +56,13 @@ export default function ChartWidget({
 
   if (config.yAxisFieldId) {
     queryParams.set("y_axis_field_id", config.yAxisFieldId);
+  }
+
+  if (config.series && config.series.length > 0) {
+    queryParams.set(
+      "series",
+      encodeURIComponent(JSON.stringify(config.series))
+    );
   }
 
   const {
@@ -183,7 +187,7 @@ export default function ChartWidget({
           >
             {config.chartType === "pie" ? (
               <PieChart
-                data={chartData.data}
+                data={chartData.data as unknown as ChartDataPoint[]}
                 xAxisLabel={chartData.xAxisLabel}
                 yAxisLabel={chartData.yAxisLabel}
               />
@@ -192,6 +196,7 @@ export default function ChartWidget({
                 data={chartData.data}
                 xAxisLabel={chartData.xAxisLabel}
                 yAxisLabel={chartData.yAxisLabel}
+                seriesLabels={chartData.seriesLabels}
               />
             )}
           </Box>

@@ -1,4 +1,4 @@
-import type { ChartConfig, FilterCondition } from "@/types/notion";
+import type { ChartConfig, FilterCondition, SeriesConfig } from "@/types/notion";
 
 export function configToUrlParams(config: ChartConfig): URLSearchParams {
   const params = new URLSearchParams();
@@ -24,6 +24,10 @@ export function configToUrlParams(config: ChartConfig): URLSearchParams {
     params.set("filters", encodeURIComponent(JSON.stringify(config.filters)));
   }
 
+  if (config.series && config.series.length > 0) {
+    params.set("series", encodeURIComponent(JSON.stringify(config.series)));
+  }
+
   return params;
 }
 
@@ -44,6 +48,7 @@ export function urlParamsToConfig(
   const sortOrder = (searchParams.get("sort_order") || "asc") as "asc" | "desc";
   const accumulate = searchParams.get("accumulate") === "true";
   const filtersParam = searchParams.get("filters");
+  const seriesParam = searchParams.get("series");
 
   let filters: FilterCondition[] | undefined;
   if (filtersParam) {
@@ -51,6 +56,15 @@ export function urlParamsToConfig(
       filters = JSON.parse(decodeURIComponent(filtersParam));
     } catch (e) {
       console.error("Failed to parse filters from URL", e);
+    }
+  }
+
+  let series: SeriesConfig[] | undefined;
+  if (seriesParam) {
+    try {
+      series = JSON.parse(decodeURIComponent(seriesParam));
+    } catch (e) {
+      console.error("Failed to parse series from URL", e);
     }
   }
 
@@ -64,6 +78,7 @@ export function urlParamsToConfig(
       sortOrder,
       accumulate,
       filters,
+      series,
     };
   }
 

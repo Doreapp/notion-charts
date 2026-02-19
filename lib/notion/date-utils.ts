@@ -33,6 +33,28 @@ export function getAllDaysInRange(
   return days;
 }
 
+export function fillMissingDaysInRange(
+  data: ChartDataPoint[],
+  startDate: string,
+  endDate: string
+): ChartDataPoint[] {
+  if (data.length === 0) {
+    const allDays = getAllDaysInRange(startDate, endDate);
+    return allDays.map((day) => ({ name: day, value: 0 }));
+  }
+
+  const allDays = getAllDaysInRange(startDate, endDate);
+  const dataMap = new Map<string, number>();
+  data.forEach((point) => {
+    dataMap.set(point.name, point.value);
+  });
+
+  return allDays.map((day) => ({
+    name: day,
+    value: dataMap.get(day) ?? 0,
+  }));
+}
+
 export function fillMissingDays(data: ChartDataPoint[]): ChartDataPoint[] {
   if (data.length === 0) return data;
 

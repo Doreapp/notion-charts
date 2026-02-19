@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useEffect, useState } from "react";
-import { useForm, Controller, FormProvider, useWatch } from "react-hook-form";
+import {
+  useForm,
+  Controller,
+  FormProvider,
+  useWatch,
+  useFieldArray,
+} from "react-hook-form";
 import {
   FormControl,
   InputLabel,
@@ -16,11 +22,15 @@ import {
   FormControlLabel,
   Divider,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
 import type {
   ChartConfig,
   DatabaseWithProperties,
   FilterCondition,
+  SeriesConfig,
 } from "@/types/notion";
 import useSWR from "swr";
 import { fetcher, UnauthorizedError } from "@/utils/fetcher";
@@ -35,6 +45,11 @@ interface ChartConfigProps {
   onAuthError?: () => void;
 }
 
+interface SeriesFormValues {
+  aggregation: "count" | "sum" | "avg";
+  yAxisFieldId: string;
+}
+
 interface FormValues {
   databaseId: string;
   xAxisFieldId: string;
@@ -44,6 +59,24 @@ interface FormValues {
   sortOrder: "asc" | "desc";
   accumulate: boolean;
   filters: FilterCondition[];
+  series: SeriesFormValues[];
+}
+
+function getInitialSeries(
+  initialConfig?: ChartConfig
+): SeriesFormValues[] {
+  if (initialConfig?.series && initialConfig.series.length > 0) {
+    return initialConfig.series.map((s) => ({
+      aggregation: s.aggregation,
+      yAxisFieldId: s.yAxisFieldId || "",
+    }));
+  }
+  return [
+    {
+      aggregation: initialConfig?.aggregation || "count",
+      yAxisFieldId: initialConfig?.yAxisFieldId || "",
+    },
+  ];
 }
 
 export default function ChartConfig({
@@ -77,6 +110,7 @@ export default function ChartConfig({
       sortOrder: initialConfig?.sortOrder || "asc",
       accumulate: initialConfig?.accumulate || false,
       filters: initialConfig?.filters || [],
+      series: getInitialSeries(initialConfig),
     },
     mode: "onBlur",
   });
@@ -90,6 +124,11 @@ export default function ChartConfig({
     getValues,
   } = methods;
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "series",
+  });
+
   useEffect(() => {
     if (initialConfig) {
       reset({
@@ -101,6 +140,7 @@ export default function ChartConfig({
         sortOrder: initialConfig.sortOrder || "asc",
         accumulate: initialConfig.accumulate || false,
         filters: initialConfig.filters || [],
+        series: getInitialSeries(initialConfig),
       });
       if (initialConfig.filters !== filters) {
         setFilters(initialConfig.filters || []);
@@ -113,6 +153,7 @@ export default function ChartConfig({
   const selectedDatabaseId = useWatch({ control, name: "databaseId" });
   const aggregation = useWatch({ control, name: "aggregation" });
   const chartType = useWatch({ control, name: "chartType" });
+  const seriesValues = useWatch({ control, name: "series" });
 
   const properties = useMemo(() => {
     return (
@@ -137,6 +178,11 @@ export default function ChartConfig({
           setValue("xAxisFieldId", "");
         }
         setValue("yAxisFieldId", "");
+        // Reset series y-axis fields when database changes
+        const currentSeries = getValues("series");
+        currentSeries.forEach((_, index) => {
+          setValue(`series.${index}.yAxisFieldId`, "");
+        });
       } else if (name === "aggregation" && value.aggregation === "count") {
         setValue("yAxisFieldId", "");
       } else if (name === "chartType") {
@@ -145,6 +191,8 @@ export default function ChartConfig({
         setValue("sortOrder", "asc");
         setValue("accumulate", false);
         setFilters([]);
+        // Reset series when chart type changes
+        setValue("series", [{ aggregation: "count", yAxisFieldId: "" }]);
       }
     });
     return () => subscription.unsubscribe();
@@ -161,18 +209,39 @@ export default function ChartConfig({
   };
 
   const onSubmit = (data: FormValues) => {
-    const config: ChartConfig = {
-      databaseId: data.databaseId,
-      xAxisFieldId: data.xAxisFieldId,
-      yAxisFieldId:
-        data.aggregation === "count" ? undefined : data.yAxisFieldId,
-      chartType: data.chartType,
-      aggregation: data.aggregation,
-      sortOrder: data.sortOrder,
-      accumulate: data.accumulate,
-      filters: filters.length > 0 ? filters : undefined,
-    };
-    onConfigChange(config);
+    if (data.chartType === "line") {
+      const seriesConfigs: SeriesConfig[] = data.series.map((s) => ({
+        aggregation: s.aggregation,
+        yAxisFieldId:
+          s.aggregation === "count" ? undefined : s.yAxisFieldId || undefined,
+      }));
+      const firstSeries = seriesConfigs[0];
+      const config: ChartConfig = {
+        databaseId: data.databaseId,
+        xAxisFieldId: data.xAxisFieldId,
+        yAxisFieldId: firstSeries.yAxisFieldId,
+        chartType: data.chartType,
+        aggregation: firstSeries.aggregation,
+        sortOrder: data.sortOrder,
+        accumulate: data.accumulate,
+        filters: filters.length > 0 ? filters : undefined,
+        series: seriesConfigs,
+      };
+      onConfigChange(config);
+    } else {
+      const config: ChartConfig = {
+        databaseId: data.databaseId,
+        xAxisFieldId: data.xAxisFieldId,
+        yAxisFieldId:
+          data.aggregation === "count" ? undefined : data.yAxisFieldId,
+        chartType: data.chartType,
+        aggregation: data.aggregation,
+        sortOrder: data.sortOrder,
+        accumulate: data.accumulate,
+        filters: filters.length > 0 ? filters : undefined,
+      };
+      onConfigChange(config);
+    }
   };
 
   if (!databases) {
@@ -243,43 +312,125 @@ export default function ChartConfig({
               }
             />
 
-            <Controller
-              name="aggregation"
-              control={control}
-              render={({ field }) => (
-                <FormControl
-                  fullWidth
-                  disabled={!selectedDatabaseId || isLoading}
-                >
-                  <InputLabel size="small">Aggregation</InputLabel>
-                  <Select
-                    {...field}
-                    label="Aggregation"
-                    disabled={!selectedDatabaseId || isLoading}
-                    size="small"
+            {chartType === "line" ? (
+              <>
+                <Divider />
+                <Typography variant="subtitle2">Data Series</Typography>
+                {fields.map((field, index) => (
+                  <Stack
+                    key={field.id}
+                    direction="row"
+                    gap={1}
+                    alignItems="flex-start"
                   >
-                    <MenuItem value="count">Count</MenuItem>
-                    <MenuItem value="sum">Sum</MenuItem>
-                    <MenuItem value="avg">Average</MenuItem>
-                  </Select>
-                </FormControl>
-              )}
-            />
+                    <Controller
+                      name={`series.${index}.aggregation`}
+                      control={control}
+                      render={({ field }) => (
+                        <FormControl
+                          sx={{ minWidth: 140 }}
+                          disabled={!selectedDatabaseId || isLoading}
+                        >
+                          <InputLabel size="small">Aggregation</InputLabel>
+                          <Select
+                            {...field}
+                            label="Aggregation"
+                            size="small"
+                            onChange={(e) => {
+                              field.onChange(e);
+                              if (e.target.value === "count") {
+                                setValue(
+                                  `series.${index}.yAxisFieldId`,
+                                  ""
+                                );
+                              }
+                            }}
+                          >
+                            <MenuItem value="count">Count</MenuItem>
+                            <MenuItem value="sum">Sum</MenuItem>
+                            <MenuItem value="avg">Average</MenuItem>
+                          </Select>
+                        </FormControl>
+                      )}
+                    />
+                    {(seriesValues?.[index]?.aggregation === "sum" ||
+                      seriesValues?.[index]?.aggregation === "avg") && (
+                      <PropertySelect
+                        name={`series.${index}.yAxisFieldId`}
+                        isLoading={isLoading}
+                        disabled={!selectedDatabaseId}
+                        required
+                        properties={numericProperties}
+                        label="Y Axis Field"
+                        emptyWarningMessage="No numeric properties"
+                      />
+                    )}
+                    {fields.length > 1 && (
+                      <IconButton
+                        size="small"
+                        onClick={() => remove(index)}
+                        sx={{ mt: 0.5 }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                  </Stack>
+                ))}
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() =>
+                    append({ aggregation: "count", yAxisFieldId: "" })
+                  }
+                  disabled={!selectedDatabaseId || isLoading}
+                  sx={{ alignSelf: "flex-start" }}
+                >
+                  Add Series
+                </Button>
+                <Divider />
+              </>
+            ) : (
+              <>
+                <Controller
+                  name="aggregation"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl
+                      fullWidth
+                      disabled={!selectedDatabaseId || isLoading}
+                    >
+                      <InputLabel size="small">Aggregation</InputLabel>
+                      <Select
+                        {...field}
+                        label="Aggregation"
+                        disabled={!selectedDatabaseId || isLoading}
+                        size="small"
+                      >
+                        <MenuItem value="count">Count</MenuItem>
+                        <MenuItem value="sum">Sum</MenuItem>
+                        <MenuItem value="avg">Average</MenuItem>
+                      </Select>
+                    </FormControl>
+                  )}
+                />
 
-            {(aggregation === "sum" || aggregation === "avg") && (
-              <PropertySelect
-                name="yAxisFieldId"
-                isLoading={isLoading}
-                disabled={!selectedDatabaseId}
-                required={aggregation === "sum" || aggregation === "avg"}
-                properties={numericProperties}
-                label="Y Axis Field (Numeric)"
-                emptyWarningMessage={
-                  selectedDatabaseId
-                    ? "No numeric properties available"
-                    : "Select a database first"
-                }
-              />
+                {(aggregation === "sum" || aggregation === "avg") && (
+                  <PropertySelect
+                    name="yAxisFieldId"
+                    isLoading={isLoading}
+                    disabled={!selectedDatabaseId}
+                    required={aggregation === "sum" || aggregation === "avg"}
+                    properties={numericProperties}
+                    label="Y Axis Field (Numeric)"
+                    emptyWarningMessage={
+                      selectedDatabaseId
+                        ? "No numeric properties available"
+                        : "Select a database first"
+                    }
+                  />
+                )}
+              </>
             )}
 
             <Controller

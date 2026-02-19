@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { notionClient } from "@/lib/notion/client";
 import {
   enrichRelationData,
+  enrichRelationDataMultiSeries,
   processNotionDataForChart,
+  processNotionDataForMultiSeriesChart,
 } from "@/lib/notion/chart-processor";
 import { getAllDatabasePages } from "@/lib/notion/api/database-pages";
 import { withAuth } from "@/lib/auth/validate-secret";
-import type { FilterCondition } from "@/types/notion";
+import type { FilterCondition, SeriesConfig } from "@/types/notion";
 import { sanitizeFilters } from "@/lib/notion/filter-sanatize";
 
 /**
@@ -24,6 +26,7 @@ async function getChartDataHandler(request: NextRequest) {
       | "desc";
     const accumulate = searchParams.get("accumulate") === "true";
     const filtersParam = searchParams.get("filters");
+    const seriesParam = searchParams.get("series");
 
     let filters: FilterCondition[] | undefined;
     if (filtersParam) {
@@ -43,6 +46,24 @@ async function getChartDataHandler(request: NextRequest) {
       }
     }
 
+    let seriesConfigs: SeriesConfig[] | undefined;
+    if (seriesParam) {
+      try {
+        seriesConfigs = JSON.parse(decodeURIComponent(seriesParam));
+        if (!Array.isArray(seriesConfigs) || seriesConfigs.length === 0) {
+          return NextResponse.json(
+            { error: "Invalid series format. Must be a non-empty array." },
+            { status: 400 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Failed to parse series parameter." },
+          { status: 400 }
+        );
+      }
+    }
+
     if (!databaseId || !xAxisFieldId) {
       return NextResponse.json(
         {
@@ -52,6 +73,112 @@ async function getChartDataHandler(request: NextRequest) {
       );
     }
 
+    const database = await notionClient.dataSources.retrieve({
+      data_source_id: databaseId,
+    });
+
+    const xAxisFieldProperty = database.properties[xAxisFieldId];
+    if (!xAxisFieldProperty) {
+      return NextResponse.json(
+        { error: `X axis field ${xAxisFieldId} not found in database` },
+        { status: 404 }
+      );
+    }
+
+    // Multi-series path
+    if (seriesConfigs) {
+      // Validate each series config
+      for (const [i, config] of seriesConfigs.entries()) {
+        if (!["count", "sum", "avg"].includes(config.aggregation)) {
+          return NextResponse.json(
+            { error: `Series ${i}: invalid aggregation type '${config.aggregation}'` },
+            { status: 400 }
+          );
+        }
+        if (
+          (config.aggregation === "sum" || config.aggregation === "avg") &&
+          !config.yAxisFieldId
+        ) {
+          return NextResponse.json(
+            { error: `Series ${i}: Y axis field is required for aggregation type '${config.aggregation}'` },
+            { status: 400 }
+          );
+        }
+        if (config.yAxisFieldId) {
+          const yProp = database.properties[config.yAxisFieldId];
+          if (!yProp) {
+            return NextResponse.json(
+              { error: `Series ${i}: Y axis field '${config.yAxisFieldId}' not found` },
+              { status: 404 }
+            );
+          }
+          if (
+            (config.aggregation === "sum" || config.aggregation === "avg") &&
+            yProp.type !== "number"
+          ) {
+            return NextResponse.json(
+              { error: `Series ${i}: Y axis field must be of type 'number' for '${config.aggregation}'` },
+              { status: 400 }
+            );
+          }
+        }
+      }
+
+      const { filters: sanatizedFilters, error } = sanitizeFilters(
+        filters,
+        database
+      );
+      if (error) {
+        return NextResponse.json({ error }, { status: 400 });
+      }
+
+      // Collect all needed filterProperties across all series
+      const filterProperties = new Set<string>([xAxisFieldId]);
+      for (const config of seriesConfigs) {
+        if (config.yAxisFieldId) filterProperties.add(config.yAxisFieldId);
+      }
+
+      const allPages = await getAllDatabasePages(databaseId, {
+        filters: sanatizedFilters,
+        filterProperties: [...filterProperties],
+      });
+
+      const xAxisFieldType = xAxisFieldProperty.type;
+      const seriesPropertyNames = seriesConfigs.map((config) => {
+        if (config.yAxisFieldId) {
+          return database.properties[config.yAxisFieldId]?.name;
+        }
+        return undefined;
+      });
+
+      let chartData = processNotionDataForMultiSeriesChart(
+        allPages,
+        xAxisFieldId,
+        xAxisFieldType,
+        seriesConfigs,
+        seriesPropertyNames,
+        sortOrder,
+        accumulate
+      );
+
+      if (xAxisFieldType === "relation") {
+        chartData = await enrichRelationDataMultiSeries(
+          chartData,
+          xAxisFieldId,
+          database
+        );
+      }
+
+      return NextResponse.json({
+        data: chartData.data,
+        seriesLabels: chartData.seriesLabels,
+        xAxisLabel: xAxisFieldProperty.name || "Value",
+        fieldType: xAxisFieldType,
+        totalPages: allPages.length,
+      });
+    }
+
+    // Single-series path (backward compat)
     if (
       aggregation !== "count" &&
       aggregation !== "sum" &&
@@ -69,18 +196,6 @@ async function getChartDataHandler(request: NextRequest) {
           error: `Y axis field is required for aggregation type: ${aggregation}`,
         },
         { status: 400 }
-      );
-    }
-
-    const database = await notionClient.dataSources.retrieve({
-      data_source_id: databaseId,
-    });
-
-    const xAxisFieldProperty = database.properties[xAxisFieldId];
-    if (!xAxisFieldProperty) {
-      return NextResponse.json(
-        { error: `X axis field ${xAxisFieldId} not found in database` },
-        { status: 404 }
       );
     }
 

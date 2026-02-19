@@ -8,29 +8,45 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
+  Legend,
 } from "recharts";
 import type { ChartDataPoint } from "@/lib/notion/chart-processor";
 
+const SERIES_COLORS = [
+  "#2383E2",
+  "#D44C47",
+  "#6940A5",
+  "#D9730D",
+  "#0F7B6C",
+  "#337EA9",
+  "#CB912F",
+  "#448361",
+];
+
 interface LineChartProps {
-  data: ChartDataPoint[];
+  data: ChartDataPoint[] | Record<string, string | number>[];
   xAxisLabel?: string;
   yAxisLabel?: string;
+  seriesLabels?: string[];
 }
 
 export default function LineChart({
   data,
   xAxisLabel,
   yAxisLabel,
+  seriesLabels,
 }: LineChartProps) {
   if (data.length === 0) {
     return null;
   }
 
+  const isMultiSeries = seriesLabels && seriesLabels.length > 0;
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RechartsLineChart
         data={data}
-        margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+        margin={{ top: 10, right: 10, left: 10, bottom: isMultiSeries ? 30 : 10 }}
       >
         <CartesianGrid
           strokeDasharray="3 3"
@@ -50,12 +66,16 @@ export default function LineChart({
         <YAxis
           tick={{ fontSize: 12, fill: "rgba(255, 255, 255, 0.65)" }}
           stroke="rgba(255, 255, 255, 0.09)"
-          label={{
-            value: yAxisLabel,
-            angle: -90,
-            position: "insideLeft",
-            style: { fontSize: 12, fill: "rgba(255, 255, 255, 0.65)" },
-          }}
+          label={
+            !isMultiSeries
+              ? {
+                  value: yAxisLabel,
+                  angle: -90,
+                  position: "insideLeft",
+                  style: { fontSize: 12, fill: "rgba(255, 255, 255, 0.65)" },
+                }
+              : undefined
+          }
         />
         <Tooltip
           contentStyle={{
@@ -73,13 +93,35 @@ export default function LineChart({
             color: "#FFFFFF",
           }}
         />
-        <Line
-          type="monotone"
-          dataKey="value"
-          stroke="#2383E2"
-          strokeWidth={2}
-          dot={false}
-        />
+        {isMultiSeries ? (
+          <>
+            <Legend
+              wrapperStyle={{
+                fontSize: "12px",
+                color: "rgba(255, 255, 255, 0.65)",
+              }}
+            />
+            {seriesLabels.map((label, index) => (
+              <Line
+                key={`series_${index}`}
+                type="monotone"
+                dataKey={`series_${index}`}
+                name={label}
+                stroke={SERIES_COLORS[index % SERIES_COLORS.length]}
+                strokeWidth={2}
+                dot={false}
+              />
+            ))}
+          </>
+        ) : (
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke="#2383E2"
+            strokeWidth={2}
+            dot={false}
+          />
+        )}
       </RechartsLineChart>
     </ResponsiveContainer>
   );

@@ -112,6 +112,11 @@ export type FilterCondition =
   | DateFilterCondition
   | CheckboxFilterCondition;
 
+export interface SeriesConfig {
+  yAxisFieldId?: string;
+  aggregation: "count" | "sum" | "avg";
+}
+
 export interface ChartConfig {
   databaseId: string;
   xAxisFieldId: string;
@@ -121,4 +126,5 @@ export interface ChartConfig {
   sortOrder?: "asc" | "desc";
   accumulate?: boolean;
   filters?: FilterCondition[];
+  series?: SeriesConfig[];
 }
